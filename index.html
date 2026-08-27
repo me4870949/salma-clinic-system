@@ -4,13 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>مركز سلمي لطب الأسنان والجلدية | عرعر - Salma Clinic Portal</title>
-  
-  <!-- Fonts: Tajawal & Cairo -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-  
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -20,27 +13,23 @@
             primary: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857', 900: '#064e3b' },
             teal: { 50: '#f0fdfa', 100: '#ccfbf1', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e', 900: '#134e4a' }
           },
-          fontFamily: {
-            sans: ['Tajawal', 'Cairo', 'system-ui', 'sans-serif'],
-          }
+          fontFamily: { sans: ['Arial', 'system-ui', '-apple-system', 'sans-serif'] }
         }
       }
     }
   </script>
-
-  <!-- React 18 & Babel Standalone -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
   <style>
-    body { font-family: 'Tajawal', 'Cairo', sans-serif; background-color: #f8fafc; color: #0f172a; }
-    @media print { body { background: #fff !important; } .no-print { display: none !important; } .print-only { display: block !important; } }
+    body { font-family: Arial, system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #0f172a; }
+    @media print { body { background: #fff !important; } .no-print { display: none !important; } }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
   <div id="root"></div>
   <script type="text/babel">
+
     const { useState, useEffect } = React;
 
     const CLINIC_INFO = {
@@ -52,58 +41,72 @@
     };
 
     const USERS = [
-      { id: "u-doc-1", name: "د. سلمى الشمري", email: "doctor@salmaclinic.sa", role: "doctor", specialtyName: "استشارية الجلدية والتجميل والليزر", avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200" },
-      { id: "u-doc-2", name: "د. فهد العنزي", email: "dr.fahad@salmaclinic.sa", role: "doctor", specialtyName: "أخصائي طب وجراحة الأسنان", avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200" },
+      { id: "u-owner-1", name: "د. عبد الرحمن الشمري", email: "owner@salmaclinic.sa", role: "owner", specialtyName: "مالك المركز والمدير العام", avatar: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=200" },
+      { id: "u-doc-1", name: "د. سلمى الشمري", email: "doctor@salmaclinic.sa", role: "doctor", specialty: "dermatology", specialtyName: "استشارية الجلدية والتجميل والليزر", avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200", baseSalary: 18000, commissionRate: 35 },
+      { id: "u-doc-2", name: "د. فهد العنزي", email: "dr.fahad@salmaclinic.sa", role: "doctor", specialty: "dental", specialtyName: "أخصائي طب وجراحة الأسنان", avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200", baseSalary: 16000, commissionRate: 30 },
+      { id: "u-doc-3", name: "د. ريم الرويلي", email: "dr.reem@salmaclinic.sa", role: "doctor", specialty: "dental", specialtyName: "أخصائية تقويم وتجميل الأسنان", avatar: "https://images.unsplash.com/photo-1594824813627-f40a1b6a18d1?auto=format&fit=crop&q=80&w=200", baseSalary: 15000, commissionRate: 30 },
       { id: "u-rec-1", name: "أحمد الصلبي", email: "reception@salmaclinic.sa", role: "receptionist", specialtyName: "مسؤول الاستقبال وشؤون المرضى", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200" },
       { id: "u-fin-1", name: "خالد الدهمشي", email: "finance@salmaclinic.sa", role: "finance", specialtyName: "المدير المالي والمحاسبي", avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=200" }
     ];
 
     const DEMO_CREDENTIALS = [
-      { role: "doctor", label: "طبيب (Doctor)", email: "doctor@salmaclinic.sa", name: "د. سلمى الشمري", route: "/dashboard/doctor" },
-      { role: "receptionist", label: "استقبال (Receptionist)", email: "reception@salmaclinic.sa", name: "أحمد الصلبي", route: "/dashboard/reception" },
-      { role: "finance", label: "مدير مالي (Financial Manager)", email: "finance@salmaclinic.sa", name: "خالد الدهمشي", route: "/dashboard/finance" }
+      { role: "patient", label: "مريض (Patient)", username: "سارة عبد الله الشمري", password: "1092837461", name: "سارة عبد الله الشمري", route: "/dashboard/patient", badge: "بوابة المريض" },
+      { role: "doctor", label: "طبيب (Doctor)", email: "doctor@salmaclinic.sa", password: "doc123", name: "د. سلمى الشمري", route: "/dashboard/doctor", badge: "كشف وتشخيص" },
+      { role: "receptionist", label: "استقبال (Receptionist)", email: "reception@salmaclinic.sa", password: "rec123", name: "أحمد الصلبي", route: "/dashboard/reception", badge: "استقبال وتقويم" },
+      { role: "finance", label: "مدير مالي (Financial Manager)", email: "finance@salmaclinic.sa", password: "fin123", name: "خالد الدهمشي", route: "/dashboard/finance", badge: "15% ZATCA" },
+      { role: "owner", label: "مالك المركز (Owner / Admin)", email: "owner@salmaclinic.sa", password: "owner123", name: "د. عبد الرحمن الشمري", route: "/dashboard/owner", badge: "الأرباح والعمولات" }
     ];
 
     const INITIAL_PATIENTS = [
-      { id: "PAT-1001", nationalId: "1092837461", name: "سارة عبد الله الشمري", phone: "+966501122334", gender: "female", age: 28, bloodGroup: "O+", allergies: "البنسلين", chronicDiseases: "لا يوجد", specialty: "dermatology", totalVisits: 4, dentalRecords: [], dermatologyRecords: [{ date: "2026-08-25", doctor: "د. سلمى الشمري", treatment: "ليزر إزالة الشعر كانديلا", parameters: "14 J/cm², 18mm", treatedAreas: ["الوجه", "الذراعين"] }] },
+      { id: "PAT-1001", nationalId: "1092837461", name: "سارة عبد الله الشمري", phone: "+966501122334", gender: "female", age: 28, bloodGroup: "O+", allergies: "البنسلين", chronicDiseases: "لا يوجد", specialty: "dermatology", totalVisits: 4, dentalRecords: [], dermatologyRecords: [{ date: "2026-08-25", doctor: "د. سلمى الشمري", treatment: "ليزر كانديلا جنتل برو", parameters: "14 J/cm², 18mm", treatedAreas: ["الوجه", "الذراعين"] }] },
       { id: "PAT-1002", nationalId: "1083746251", name: "محمد سلطان العنزي", phone: "+966554499881", gender: "male", age: 34, bloodGroup: "A+", allergies: "لا يوجد", chronicDiseases: "ضغط دم خفيف", specialty: "dental", totalVisits: 3, dentalRecords: [{ toothNumber: 16, condition: "root-canal", conditionLabel: "علاج عصب", date: "2026-08-24", doctor: "د. فهد العنزي" }], dermatologyRecords: [] },
       { id: "PAT-1003", nationalId: "1074839201", name: "نورة فهد المطيري", phone: "+966543322119", gender: "female", age: 31, bloodGroup: "B+", allergies: "السلفا", chronicDiseases: "خمول الغدة", specialty: "dermatology", totalVisits: 6, dentalRecords: [], dermatologyRecords: [{ date: "2026-08-26", doctor: "د. سلمى الشمري", treatment: "حقن بوتوكس أليرجان (46U)", parameters: "الجبهة ومحيط العينين", treatedAreas: ["الوجه"] }] }
     ];
 
     const INITIAL_APPOINTMENTS = [
-      { id: "APT-001", patientId: "PAT-1001", patientName: "سارة عبد الله الشمري", phone: "+966501122334", doctorName: "د. سلمى الشمري", specialty: "dermatology", serviceName: "جلسة رتوش ليزر كانديلا", date: "2026-08-26", time: "18:30", status: "in-progress", statusLabel: "في غرفة الكشف", price: 350 },
-      { id: "APT-002", patientId: "PAT-1002", patientName: "محمد سلطان العنزي", phone: "+966554499881", doctorName: "د. فهد العنزي", specialty: "dental", serviceName: "تركيب تاج زيركون للسن 16", date: "2026-08-26", time: "19:15", status: "waiting", statusLabel: "في صالة الانتظار", price: 850 },
-      { id: "APT-003", patientId: "PAT-1003", patientName: "نورة فهد المطيري", phone: "+966543322119", doctorName: "د. سلمى الشمري", specialty: "dermatology", serviceName: "حقن فيلر شفايف Juvederm", date: "2026-08-26", time: "20:00", status: "scheduled", statusLabel: "مؤكد", price: 1200 }
+      { id: "APT-001", patientId: "PAT-1001", patientName: "سارة عبد الله الشمري", phone: "+966501122334", doctorId: "u-doc-1", doctorName: "د. سلمى الشمري", specialty: "dermatology", serviceName: "جلسة رتوش ليزر كانديلا", date: "2026-08-27", time: "18:30", status: "in-progress", statusLabel: "في غرفة الكشف", price: 350 },
+      { id: "APT-002", patientId: "PAT-1002", patientName: "محمد سلطان العنزي", phone: "+966554499881", doctorId: "u-doc-2", doctorName: "د. فهد العنزي", specialty: "dental", serviceName: "تركيب تاج زيركون للسن 16", date: "2026-08-27", time: "19:15", status: "waiting", statusLabel: "في صالة الانتظار", price: 850 },
+      { id: "APT-003", patientId: "PAT-1003", patientName: "نورة فهد المطيري", phone: "+966543322119", doctorId: "u-doc-1", doctorName: "د. سلمى الشمري", specialty: "dermatology", serviceName: "حقن فيلر شفايف Juvederm", date: "2026-08-27", time: "20:00", status: "scheduled", statusLabel: "مؤكد", price: 1200 },
+      { id: "APT-004", patientId: "PAT-1001", patientName: "سارة عبد الله الشمري", phone: "+966501122334", doctorId: "u-doc-1", doctorName: "د. سلمى الشمري", specialty: "dermatology", serviceName: "جلسة نضارة Profhilo", date: "2026-08-29", time: "19:00", status: "scheduled", statusLabel: "مؤكد", price: 950 }
     ];
 
     const INITIAL_PRESCRIPTIONS = [
       { id: "RX-8801", patientId: "PAT-1002", patientName: "محمد سلطان العنزي", doctorName: "د. فهد العنزي", doctorTitle: "أخصائي طب وجراحة الأسنان", date: "2026-08-24", diagnosis: "التهاب ما بعد علاج العصب للسن 16", items: [{ drugName: "Augmentin 1g", dosage: "قرص واحد", frequency: "مرتين يومياً", duration: "5 أيام" }, { drugName: "Cataflam 50mg", dosage: "قرص", frequency: "عند اللزوم", duration: "3 أيام" }] },
-      { id: "RX-8802", patientId: "PAT-1003", patientName: "نورة فهد المطيري", doctorName: "د. سلمى الشمري", doctorTitle: "استشارية الجلدية والتجميل", date: "2026-08-26", diagnosis: "عناية ما بعد حقن البوتوكس والفيلر", items: [{ drugName: "Arnicare Gel", dosage: "دهان موضعي", frequency: "3 مرات يومياً", duration: "4 أيام" }, { drugName: "Avene Cicalfate+", dosage: "كريم مرمم", frequency: "مرتين يومياً", duration: "7 أيام" }] }
+      { id: "RX-8802", patientId: "PAT-1003", patientName: "نورة فهد المطيري", doctorName: "د. سلمى الشمري", doctorTitle: "استشارية الجلدية والتجميل", date: "2026-08-26", diagnosis: "عناية ما بعد حقن البوتوكس والفيلر", items: [{ drugName: "Arnicare Gel", dosage: "دهان موضعي", frequency: "3 مرات يومياً", duration: "4 أيام" }, { drugName: "Avene Cicalfate+", dosage: "كريم مرمم", frequency: "مرتين يومياً", duration: "7 أيام" }] },
+      { id: "RX-8803", patientId: "PAT-1001", patientName: "سارة عبد الله الشمري", doctorName: "د. سلمى الشمري", doctorTitle: "استشارية الجلدية والتجميل", date: "2026-08-25", diagnosis: "واقي شمس ومرطب بعد الليزر", items: [{ drugName: "Fucidin H", dosage: "مرتين يومياً", frequency: "3 أيام", duration: "3 أيام" }] }
     ];
 
     const INITIAL_INVOICES = [
-      { id: "INV-9001", invoiceNumber: "SALMA-2026-0901", patientName: "محمد سلطان العنزي", patientIdNumber: "1083746251", date: "2026-08-24", doctorName: "د. فهد العنزي", items: [{ description: "علاج عصب وسحب جذور السن 16", quantity: 1, unitPrice: 750, discount: 50, total: 700 }], subtotal: 700, vatAmount: 105, totalWithVat: 805, paymentMethodLabel: "مدى (Mada)" },
-      { id: "INV-9002", invoiceNumber: "SALMA-2026-0902", patientName: "سارة عبد الله الشمري", patientIdNumber: "1092837461", date: "2026-08-25", doctorName: "د. سلمى الشمري", items: [{ description: "جلسة ليزر كانديلا جنتل برو", quantity: 1, unitPrice: 450, discount: 50, total: 400 }], subtotal: 400, vatAmount: 60, totalWithVat: 460, paymentMethodLabel: "Apple Pay (مدى)" }
+      { id: "INV-9001", invoiceNumber: "SALMA-2026-0901", patientId: "PAT-1002", patientName: "محمد سلطان العنزي", patientIdNumber: "1083746251", doctorId: "u-doc-2", doctorName: "د. فهد العنزي", specialty: "dental", date: "2026-08-24", items: [{ description: "علاج عصب وسحب جذور السن 16", quantity: 1, unitPrice: 750, discount: 50, total: 700 }], subtotal: 700, vatAmount: 105, totalWithVat: 805, paymentMethodLabel: "مدى (Mada)" },
+      { id: "INV-9002", invoiceNumber: "SALMA-2026-0902", patientId: "PAT-1001", patientName: "سارة عبد الله الشمري", patientIdNumber: "1092837461", doctorId: "u-doc-1", doctorName: "د. سلمى الشمري", specialty: "dermatology", date: "2026-08-25", items: [{ description: "جلسة ليزر كانديلا جنتل برو", quantity: 1, unitPrice: 450, discount: 50, total: 400 }], subtotal: 400, vatAmount: 60, totalWithVat: 460, paymentMethodLabel: "Apple Pay (مدى)" }
     ];
 
     const WHATSAPP_TEMPLATES = [
-      { id: "tpl-1", title: "تأكيد حجز موعد جديد", template: `أهلاً بك {patient_name} 🌸\nنؤكد حجز موعدك في *مركز سلمي لطب الأسنان والجلدية في عرعر*.\n📅 التاريخ: {date}\n⏰ الوقت: {time}\n👨‍⚕️ العيادة: {doctor_name}\n📍 الموقع: عرعر - طريق الملك عبدالعزيز\nللتواصل: 0146628899 ✨` },
-      { id: "tpl-2", title: "تذكير بالموعد (24 ساعة)", template: `تذكير بموعدك غداً ⏰\nعزيزي/عزيزتي {patient_name}، نذكرك بموعدك غداً في *مركز سلمي لطب الأسنان والجلدية*:\n⏰ الموعد: {time} - {date}\n🩺 الطبيب: {doctor_name}\nدمتم بصحة وجمال 🌿` },
-      { id: "tpl-3", title: "رابط الوصفة الطبية الإلكترونية", template: `عزيزي/عزيزتي {patient_name} 💊\nصدرت وصفتك الطبية الإلكترونية رقم {rx_id} من قِبل {doctor_name} في *مركز سلمي لطب الأسنان والجلدية*.\n🔗 استعراض الوصفة:\nhttps://salmaclinic.sa/rx/{rx_id}\nألف سلامة عليك 💐` },
-      { id: "tpl-4", title: "رابط الفاتورة الضريبية ZATCA", template: `مرحباً {patient_name} 🧾\nتم إصدار فاتورتك الضريبية الإلكترونية رقم: {invoice_id}\n💵 الإجمالي شامل 15% ضريبة: {total_amount} ريال\n🔗 تحميل الفاتورة:\nhttps://salmaclinic.sa/invoices/{invoice_id}\nشاكرين لزيارتكم مركز سلمي ✨` }
+      { id: "tpl-1", title: "تأكيد حجز موعد جديد", template: "أهلاً بك {patient_name} 🌸\nنؤكد حجز موعدك في *مركز سلمي لطب الأسنان والجلدية في عرعر*.\n📅 التاريخ: {date}\n⏰ الوقت: {time}\n👨‍⚕️ العيادة: {doctor_name}\n📍 الموقع: عرعر - طريق الملك عبدالعزيز\nللتواصل: 0146628899 ✨" },
+      { id: "tpl-2", title: "تذكير بالموعد (24 ساعة)", template: "تذكير بموعدك غداً ⏰\nعزيزي/عزيزتي {patient_name}، نذكرك بموعدك غداً في *مركز سلمي لطب الأسنان والجلدية*:\n⏰ الموعد: {time} - {date}\n🩺 الطبيب: {doctor_name}\nدمتم بصحة وجمال 🌿" },
+      { id: "tpl-3", title: "رابط الوصفة الطبية الإلكترونية", template: "عزيزي/عزيزتي {patient_name} 💊\nصدرت وصفتك الطبية الإلكترونية رقم {rx_id} من قِبل {doctor_name} في *مركز سلمي لطب الأسنان والجلدية*.\n🔗 استعراض الوصفة:\nhttps://salmaclinic.sa/rx/{rx_id}\nألف سلامة عليك 💐" },
+      { id: "tpl-4", title: "رابط الفاتورة الضريبية ZATCA", template: "مرحباً {patient_name} 🧾\nتم إصدار فاتورتك الضريبية الإلكترونية رقم: {invoice_id}\n💵 الإجمالي شامل 15% ضريبة: {total_amount} ريال\n🔗 تحميل الفاتورة:\nhttps://salmaclinic.sa/invoices/{invoice_id}\nشاكرين لزيارتكم مركز سلمي ✨" }
     ];
 
     function App() {
-      const [user, setUser] = useState(USERS[0]);
+      const [user, setUser] = useState(USERS[1]);
       const [currentPath, setCurrentPath] = useState('/dashboard/doctor');
       const [patients, setPatients] = useState(INITIAL_PATIENTS);
       const [appointments, setAppointments] = useState(INITIAL_APPOINTMENTS);
       const [prescriptions, setPrescriptions] = useState(INITIAL_PRESCRIPTIONS);
       const [invoices, setInvoices] = useState(INITIAL_INVOICES);
+      const [doctors, setDoctors] = useState(USERS.filter(u => u.role === 'doctor'));
 
+      const [patientTab, setPatientTab] = useState('appointments');
       const [selectedPatient, setSelectedPatient] = useState(INITIAL_PATIENTS[0]);
       const [selectedRx, setSelectedRx] = useState(INITIAL_PRESCRIPTIONS[0]);
       const [selectedInv, setSelectedInv] = useState(INITIAL_INVOICES[0]);
+
+      const [loginTab, setLoginTab] = useState('patient');
+      const [inputPatientName, setInputPatientName] = useState('سارة عبد الله الشمري');
+      const [inputNationalId, setInputNationalId] = useState('1092837461');
+      const [inputEmail, setInputEmail] = useState('doctor@salmaclinic.sa');
+      const [inputPassword, setInputPassword] = useState('doc123');
 
       const [waPatientId, setWaPatientId] = useState(INITIAL_PATIENTS[0].id);
       const [waTplId, setWaTplId] = useState(WHATSAPP_TEMPLATES[0].id);
@@ -114,6 +117,17 @@
       const [toothCond, setToothCond] = useState('composite-filling');
       const [toothNote, setToothNote] = useState('');
 
+      const [showSlotModal, setShowSlotModal] = useState(false);
+      const [slotDate, setSlotDate] = useState('2026-08-27');
+      const [slotTime, setSlotTime] = useState('18:00');
+      const [slotPatientId, setSlotPatientId] = useState(INITIAL_PATIENTS[0].id);
+      const [slotSpecialty, setSlotSpecialty] = useState('dental');
+      const [slotDoctor, setSlotDoctor] = useState('د. فهد العنزي');
+      const [slotService, setSlotService] = useState('كشف استشاري وخطة علاج أسنان');
+
+      const [editingDocId, setEditingDocId] = useState(null);
+      const [tempRate, setTempRate] = useState('30');
+
       useEffect(() => {
         const p = patients.find(pt => pt.id === waPatientId) || patients[0];
         const t = WHATSAPP_TEMPLATES.find(tpl => tpl.id === waTplId) || WHATSAPP_TEMPLATES[0];
@@ -123,62 +137,192 @@
 
         let txt = t.template;
         txt = txt.replace(/{patient_name}/g, p.name);
-        txt = txt.replace(/{doctor_name}/g, appt?.doctorName || 'د. سلمى الشمري');
-        txt = txt.replace(/{date}/g, appt?.date || '2026-08-26');
-        txt = txt.replace(/{time}/g, appt?.time || '18:30');
-        txt = txt.replace(/{rx_id}/g, rx?.id || 'RX-8801');
-        txt = txt.replace(/{invoice_id}/g, inv?.invoiceNumber || 'SALMA-2026-0901');
+        txt = txt.replace(/{doctor_name}/g, appt ? appt.doctorName : 'د. سلمى الشمري');
+        txt = txt.replace(/{date}/g, appt ? appt.date : '2026-08-27');
+        txt = txt.replace(/{time}/g, appt ? appt.time : '18:30');
+        txt = txt.replace(/{rx_id}/g, rx ? rx.id : 'RX-8801');
+        txt = txt.replace(/{invoice_id}/g, inv ? inv.invoiceNumber : 'SALMA-2026-0901');
         txt = txt.replace(/{total_amount}/g, inv ? String(inv.totalWithVat) : '460');
 
         setWaMessage(txt);
         setWaPhone(p.phone);
       }, [waPatientId, waTplId, appointments, prescriptions, invoices, patients]);
 
-      const handleLogin = (roleKey) => {
-        const u = USERS.find(usr => usr.role === roleKey) || USERS[0];
-        setUser(u);
+      const handlePatientLogin = (e) => {
+        e.preventDefault();
+        const found = patients.find(p => (p.name.includes(inputPatientName.trim()) || p.name === inputPatientName.trim()) && p.nationalId === inputNationalId.trim());
+        if (found) {
+          const pUser = { id: found.id, name: found.name, role: 'patient', nationalId: found.nationalId, phone: found.phone, avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200", specialtyName: "مريض (" + found.id + ")" };
+          setUser(pUser);
+          setSelectedPatient(found);
+          setCurrentPath('/dashboard/patient');
+        } else {
+          alert('بيانات المريض غير متطابقة. يرجى تجربة سارة عبد الله الشمري / 1092837461');
+        }
+      };
+
+      const handleStaffLogin = (e) => {
+        e.preventDefault();
+        const found = USERS.find(u => u.email.toLowerCase() === inputEmail.toLowerCase());
+        if (found) {
+          setUser(found);
+          if (found.role === 'doctor') setCurrentPath('/dashboard/doctor');
+          else if (found.role === 'receptionist') setCurrentPath('/dashboard/reception');
+          else if (found.role === 'finance') setCurrentPath('/dashboard/finance');
+          else if (found.role === 'owner') setCurrentPath('/dashboard/owner');
+        } else {
+          alert('بيانات الدخول غير صحيحة');
+        }
+      };
+
+      const handleDemoLogin = (roleKey) => {
+        if (roleKey === 'patient') {
+          const p = INITIAL_PATIENTS[0];
+          const pUser = { id: p.id, name: p.name, role: 'patient', nationalId: p.nationalId, phone: p.phone, avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200", specialtyName: "مريض (" + p.id + ")" };
+          setUser(pUser);
+          setSelectedPatient(p);
+          setCurrentPath('/dashboard/patient');
+          return;
+        }
+
+        const target = USERS.find(u => u.role === roleKey) || USERS[0];
+        setUser(target);
         if (roleKey === 'doctor') setCurrentPath('/dashboard/doctor');
         else if (roleKey === 'receptionist') setCurrentPath('/dashboard/reception');
         else if (roleKey === 'finance') setCurrentPath('/dashboard/finance');
+        else if (roleKey === 'owner') setCurrentPath('/dashboard/owner');
+      };
+
+      const handleCancelAppt = (id) => {
+        if (window.confirm('هل تريد تأكيد إلغاء هذا الموعد؟')) {
+          setAppointments(appointments.map(a => a.id === id ? { ...a, status: 'cancelled', statusLabel: 'ملغي' } : a));
+        }
+      };
+
+      const handleSaveSlot = (e) => {
+        e.preventDefault();
+        const p = patients.find(pt => pt.id === slotPatientId) || patients[0];
+        const newAppt = {
+          id: "APT-2026-" + (appointments.length + 1),
+          patientId: p.id,
+          patientName: p.name,
+          phone: p.phone,
+          doctorId: slotSpecialty === 'dental' ? 'u-doc-2' : 'u-doc-1',
+          doctorName: slotDoctor,
+          specialty: slotSpecialty,
+          serviceName: slotService,
+          date: slotDate,
+          time: slotTime,
+          status: 'waiting',
+          statusLabel: 'في صالة الانتظار',
+          price: slotSpecialty === 'dental' ? 150 : 200
+        };
+        setAppointments([newAppt, ...appointments]);
+        setShowSlotModal(false);
+        alert("تم حجز موعد " + p.name + " بنجاح في خانة (" + slotDate + " - " + slotTime + ")!");
       };
 
       const handleSaveTooth = (e) => {
         e.preventDefault();
         if (!selectedTooth) return;
-        const newRec = { toothNumber: selectedTooth, condition: toothCond, conditionLabel: toothCond === 'root-canal' ? 'علاج عصب' : 'حشوة تجميلية', date: '2026-08-26', doctor: user.name, notes: toothNote || 'إجراء مسجل' };
+        const newRec = { toothNumber: selectedTooth, condition: toothCond, conditionLabel: toothCond === 'root-canal' ? 'علاج عصب' : 'حشوة تجميلية', date: '2026-08-27', doctor: user?.name || 'د. فهد العنزي', notes: toothNote || 'إجراء مسجل' };
         const updated = { ...selectedPatient, dentalRecords: [newRec, ...(selectedPatient.dentalRecords || []).filter(r => r.toothNumber !== selectedTooth)] };
         setSelectedPatient(updated);
         setPatients(patients.map(p => p.id === updated.id ? updated : p));
-        alert('تم حفظ الإجراء للسن رقم #' + selectedTooth);
+        alert('تم حفظ تشخيص السن #' + selectedTooth);
       };
 
-      const handleSendWhatsApp = () => {
-        let clean = waPhone.replace(/[^0-9]/g, '');
-        if (clean.startsWith('05')) clean = '966' + clean.substring(1);
-        else if (clean.startsWith('5')) clean = '966' + clean;
-        window.open('https://wa.me/' + clean + '?text=' + encodeURIComponent(waMessage), '_blank');
+      const handleUpdateRate = (docId) => {
+        setDoctors(doctors.map(d => d.id === docId ? { ...d, commissionRate: Number(tempRate) } : d));
+        setEditingDocId(null);
       };
+
+      const doctorStats = doctors.map(doc => {
+        const docInvs = invoices.filter(inv => inv.doctorName === doc.name || inv.doctorId === doc.id);
+        const gross = docInvs.reduce((s, i) => s + i.subtotal, 0);
+        const commRate = doc.commissionRate || 30;
+        const commAmt = (gross * commRate) / 100;
+        const base = doc.baseSalary || 15000;
+        const payout = base + commAmt;
+        const clinicNet = gross - commAmt;
+        return { ...doc, gross, commAmt, payout, clinicNet, count: docInvs.length };
+      });
+
+      const totalClinicGross = invoices.reduce((s, i) => s + i.subtotal, 0);
+      const totalClinicVat = invoices.reduce((s, i) => s + i.vatAmount, 0);
+      const totalClinicWithVat = invoices.reduce((s, i) => s + i.totalWithVat, 0);
+      const totalDoctorComms = doctorStats.reduce((s, d) => s + d.commAmt, 0);
+      const totalClinicNetProfit = totalClinicGross - totalDoctorComms;
+
+      const timeSlots = ['09:00', '10:00', '11:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+      const weekDays = [
+        { label: 'السبت', date: '2026-08-27' },
+        { label: 'الأحد', date: '2026-08-28' },
+        { label: 'الاثنين', date: '2026-08-29' },
+        { label: 'الثلاثاء', date: '2026-08-30' },
+        { label: 'الأربعاء', date: '2026-08-31' }
+      ];
 
       if (currentPath === '/login' || !user) {
         return (
-          <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 px-4">
-            <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-              <div className="inline-flex p-3.5 bg-emerald-600 rounded-2xl text-white text-3xl mb-3">🩺</div>
-              <h1 className="text-2xl font-black text-white">{CLINIC_INFO.name}</h1>
-              <p className="text-emerald-400 text-xs mt-1">{CLINIC_INFO.nameEn} • {CLINIC_INFO.branch}</p>
+          <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-10 px-4 text-right" dir="rtl">
+            <div className="max-w-xl mx-auto w-full text-center">
+              <div className="inline-flex p-3.5 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-3xl text-white text-3xl mb-3 shadow-xl">🩺</div>
+              <h1 className="text-2xl sm:text-3xl font-black text-white">{CLINIC_INFO.name}</h1>
+              <p className="text-emerald-400 text-xs sm:text-sm font-semibold mt-1">{CLINIC_INFO.nameEn} • {CLINIC_INFO.branch}</p>
             </div>
-            <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl text-right">
-              <h2 className="text-sm font-bold text-white mb-2">تسجيل الدخول السريع (Demo Credentials)</h2>
-              <div className="space-y-2 mb-4">
-                {DEMO_CREDENTIALS.map(d => (
-                  <button key={d.role} onClick={() => handleLogin(d.role)} className="w-full p-3 rounded-xl bg-slate-800 hover:bg-emerald-950/40 border border-slate-700 text-right flex justify-between items-center transition">
-                    <div>
-                      <div className="text-xs font-bold text-white">{d.label}</div>
-                      <div className="text-[10px] text-slate-400">{d.name}</div>
-                    </div>
-                    <span className="text-[10px] font-mono text-emerald-400" dir="ltr">{d.route}</span>
+
+            <div className="mt-6 max-w-xl mx-auto w-full bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-2xl">
+              <div className="flex bg-slate-800 p-1.5 rounded-2xl mb-6">
+                <button type="button" onClick={() => setLoginTab('patient')} className={"flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition " + (loginTab === 'patient' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow' : 'text-slate-400')}>
+                  👤 دخول المرضى (الاسم + الهوية)
+                </button>
+                <button type="button" onClick={() => setLoginTab('staff')} className={"flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition " + (loginTab === 'staff' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow' : 'text-slate-400')}>
+                  🔑 دخول الكادر الطبي والإداري
+                </button>
+              </div>
+
+              {loginTab === 'patient' ? (
+                <form onSubmit={handlePatientLogin} className="space-y-4 text-xs">
+                  <div>
+                    <label className="block text-slate-300 font-bold mb-1">اسم المريض المسجل (Username)</label>
+                    <input type="text" value={inputPatientName} onChange={e => setInputPatientName(e.target.value)} placeholder="سارة عبد الله الشمري" className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-bold mb-1">رقم الهوية الوطنية / الإقامة (Password)</label>
+                    <input type="password" dir="ltr" value={inputNationalId} onChange={e => setInputNationalId(e.target.value)} placeholder="1092837461" className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs font-mono font-bold" />
+                  </div>
+                  <button type="submit" className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black rounded-xl text-xs sm:text-sm shadow-lg">
+                    دخول إلى بوابة المريض
                   </button>
-                ))}
+                </form>
+              ) : (
+                <form onSubmit={handleStaffLogin} className="space-y-4 text-xs">
+                  <div>
+                    <label className="block text-slate-300 font-bold mb-1">البريد الإلكتروني المهني</label>
+                    <input type="email" dir="ltr" value={inputEmail} onChange={e => setInputEmail(e.target.value)} className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs font-mono" />
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-bold mb-1">كلمة المرور</label>
+                    <input type="password" dir="ltr" value={inputPassword} onChange={e => setInputPassword(e.target.value)} className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs font-mono" />
+                  </div>
+                  <button type="submit" className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black rounded-xl text-xs sm:text-sm shadow-lg">
+                    دخول الكادر إلى المنظومة
+                  </button>
+                </form>
+              )}
+
+              <div className="mt-8 pt-6 border-t border-slate-800">
+                <div className="text-xs font-bold text-slate-400 mb-3">حسابات تجريبية فورية بنقرة واحدة (5 أدوار):</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {DEMO_CREDENTIALS.map(d => (
+                    <button key={d.role} onClick={() => handleDemoLogin(d.role)} className="p-3 rounded-xl bg-slate-800 hover:bg-emerald-950/50 border border-slate-700 text-right transition">
+                      <div className="text-xs font-black text-white">{d.label}</div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">{d.name}</div>
+                      <div className="text-[9px] font-mono text-emerald-400 mt-1" dir="ltr">{d.route}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -186,25 +330,41 @@
       }
 
       return (
-        <div className="min-h-screen flex flex-col bg-slate-50">
+        <div className="min-h-screen flex flex-col bg-slate-50 font-sans" dir="rtl">
           <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
             <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-              <div className="flex items-center gap-3 cursor-pointer" onClick={() => setCurrentPath(user.role === 'doctor' ? '/dashboard/doctor' : user.role === 'receptionist' ? '/dashboard/reception' : '/dashboard/finance')}>
+              <div className="flex items-center gap-3 cursor-pointer" onClick={() => {
+                if (user.role === 'patient') setCurrentPath('/dashboard/patient');
+                else if (user.role === 'doctor') setCurrentPath('/dashboard/doctor');
+                else if (user.role === 'receptionist') setCurrentPath('/dashboard/reception');
+                else if (user.role === 'finance') setCurrentPath('/dashboard/finance');
+                else if (user.role === 'owner') setCurrentPath('/dashboard/owner');
+              }}>
                 <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black">🦷</div>
                 <div>
-                  <h1 className="text-sm font-black text-slate-900">{CLINIC_INFO.name}</h1>
+                  <h1 className="text-xs sm:text-sm font-black text-slate-900">{CLINIC_INFO.name}</h1>
                   <p className="text-[10px] text-slate-500">{CLINIC_INFO.branch}</p>
                 </div>
               </div>
+
               <div className="flex items-center gap-2">
-                <div className="hidden sm:flex bg-slate-100 p-1 rounded-xl">
+                <div className="hidden lg:flex bg-slate-100 p-1 rounded-xl">
                   {DEMO_CREDENTIALS.map(d => (
-                    <button key={d.role} onClick={() => handleLogin(d.role)} className={`px-2.5 py-1 rounded-lg text-xs font-bold ${user.role === d.role ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}>
-                      {d.role === 'doctor' ? 'طبيب' : d.role === 'receptionist' ? 'استقبال' : 'مالية'}
+                    <button key={d.role} onClick={() => handleDemoLogin(d.role)} className={"px-2.5 py-1 rounded-lg text-xs font-bold transition " + (user.role === d.role ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500')}>
+                      {d.role === 'patient' ? 'مريض' : d.role === 'doctor' ? 'طبيب' : d.role === 'receptionist' ? 'استقبال' : d.role === 'finance' ? 'مالية' : 'مالك'}
                     </button>
                   ))}
                 </div>
-                <button onClick={() => { setUser(null); setCurrentPath('/login'); }} className="text-xs text-rose-600 bg-rose-50 px-3 py-1.5 rounded-xl font-bold">خروج</button>
+
+                <div className="flex items-center gap-2 pr-2 border-r border-slate-200">
+                  <div className="hidden sm:block text-left text-xs font-bold text-slate-900">
+                    {user.name}
+                    <div className="text-[10px] text-slate-500">{user.specialtyName}</div>
+                  </div>
+                  <button onClick={() => { setUser(null); setCurrentPath('/login'); }} className="text-xs text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl font-bold transition">
+                    خروج
+                  </button>
+                </div>
               </div>
             </div>
           </header>
@@ -214,63 +374,216 @@
               <div className="space-y-4">
                 <div className="text-[10px] font-bold text-slate-500 uppercase px-2">لوحات التحكم</div>
                 <div className="space-y-1">
-                  {user.role === 'doctor' && <button onClick={() => setCurrentPath('/dashboard/doctor')} className={`w-full text-right p-2 rounded-xl text-xs font-bold ${currentPath === '/dashboard/doctor' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}>🩺 كشف الطبيب</button>}
-                  {['receptionist', 'doctor', 'finance'].includes(user.role) && <button onClick={() => setCurrentPath('/dashboard/reception')} className={`w-full text-right p-2 rounded-xl text-xs font-bold ${currentPath === '/dashboard/reception' ? 'bg-teal-600 text-white' : 'hover:bg-slate-800'}`}>📅 الاستقبال</button>}
-                  {user.role === 'finance' && <button onClick={() => setCurrentPath('/dashboard/finance')} className={`w-full text-right p-2 rounded-xl text-xs font-bold ${currentPath === '/dashboard/finance' ? 'bg-cyan-600 text-white' : 'hover:bg-slate-800'}`}>💼 الإدارة والمالية</button>}
+                  {user.role === 'patient' && <button onClick={() => setCurrentPath('/dashboard/patient')} className={"w-full text-right p-2.5 rounded-xl text-xs font-bold " + (currentPath === '/dashboard/patient' ? 'bg-purple-600 text-white' : 'hover:bg-slate-800')}>👤 بوابة المريض</button>}
+                  {user.role === 'doctor' && <button onClick={() => setCurrentPath('/dashboard/doctor')} className={"w-full text-right p-2.5 rounded-xl text-xs font-bold " + (currentPath === '/dashboard/doctor' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800')}>🩺 كشف الطبيب</button>}
+                  {['receptionist', 'doctor', 'finance', 'owner'].includes(user.role) && <button onClick={() => setCurrentPath('/dashboard/reception')} className={"w-full text-right p-2.5 rounded-xl text-xs font-bold " + (currentPath === '/dashboard/reception' ? 'bg-teal-600 text-white' : 'hover:bg-slate-800')}>📅 مكتب الاستقبال</button>}
+                  {['finance', 'owner'].includes(user.role) && <button onClick={() => setCurrentPath('/dashboard/finance')} className={"w-full text-right p-2.5 rounded-xl text-xs font-bold " + (currentPath === '/dashboard/finance' ? 'bg-cyan-600 text-white' : 'hover:bg-slate-800')}>💼 الإدارة والمالية</button>}
+                  {user.role === 'owner' && <button onClick={() => setCurrentPath('/dashboard/owner')} className={"w-full text-right p-2.5 rounded-xl text-xs font-bold " + (currentPath === '/dashboard/owner' ? 'bg-amber-600 text-white' : 'hover:bg-slate-800')}>👑 مالك المركز والعمولات</button>}
                 </div>
-                <div className="text-[10px] font-bold text-slate-500 uppercase px-2 pt-2">الخدمات السريرية</div>
+
+                <div className="text-[10px] font-bold text-slate-500 uppercase px-2 pt-2">الخدمات والعمليات</div>
                 <div className="space-y-1">
-                  <button onClick={() => setCurrentPath('/appointments')} className={`w-full text-right p-2 rounded-xl text-xs font-bold ${currentPath === '/appointments' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}>🗓 المواعيد (/appointments)</button>
-                  <button onClick={() => setCurrentPath('/patients')} className={`w-full text-right p-2 rounded-xl text-xs font-bold ${currentPath === '/patients' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}>👥 سجل المرضى و EMR (/patients)</button>
-                  <button onClick={() => setCurrentPath('/prescriptions')} className={`w-full text-right p-2 rounded-xl text-xs font-bold ${currentPath === '/prescriptions' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}>📄 الروشتات (/prescriptions)</button>
-                  <button onClick={() => setCurrentPath('/invoices')} className={`w-full text-right p-2 rounded-xl text-xs font-bold ${currentPath === '/invoices' ? 'bg-teal-600 text-white' : 'hover:bg-slate-800'}`}>🧾 الفواتير 15% ZATCA (/invoices)</button>
-                  <button onClick={() => setCurrentPath('/whatsapp-notifications')} className={`w-full text-right p-2 rounded-xl text-xs font-bold ${currentPath === '/whatsapp-notifications' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}>💬 إشعارات واتساب (/whatsapp)</button>
+                  <button onClick={() => setCurrentPath('/appointments')} className={"w-full text-right p-2 rounded-xl text-xs font-bold " + (currentPath === '/appointments' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800')}>🗓 جدول المواعيد</button>
+                  {user.role !== 'patient' && <button onClick={() => setCurrentPath('/patients')} className={"w-full text-right p-2 rounded-xl text-xs font-bold " + (currentPath === '/patients' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800')}>👥 سجل المرضى EMR</button>}
+                  <button onClick={() => setCurrentPath('/prescriptions')} className={"w-full text-right p-2 rounded-xl text-xs font-bold " + (currentPath === '/prescriptions' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800')}>📄 الروشتات الطبية</button>
+                  <button onClick={() => setCurrentPath('/invoices')} className={"w-full text-right p-2 rounded-xl text-xs font-bold " + (currentPath === '/invoices' ? 'bg-teal-600 text-white' : 'hover:bg-slate-800')}>🧾 فواتير 15% ZATCA</button>
+                  {user.role !== 'patient' && <button onClick={() => setCurrentPath('/whatsapp-notifications')} className={"w-full text-right p-2 rounded-xl text-xs font-bold " + (currentPath === '/whatsapp-notifications' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800')}>💬 إشعارات الواتساب</button>}
                 </div>
               </div>
-              <div className="text-[10px] text-slate-500">مركز سلمي • عرعر</div>
+              <div className="text-[10px] text-slate-500 font-bold">مركز سلمي • عرعر</div>
             </aside>
 
-            <main className="flex-1 p-6 min-w-0 overflow-y-auto">
-              {currentPath === '/dashboard/doctor' && (
-                <div className="space-y-4">
-                  <div className="bg-gradient-to-l from-emerald-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl">
-                    <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-bold">لوحة الطبيب</span>
-                    <h2 className="text-xl font-extrabold mt-2">أهلاً، {user.name} 🌸</h2>
-                    <p className="text-xs text-emerald-100">{user.specialtyName} • مركز سلمي بعرعر</p>
+            <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-y-auto">
+              {currentPath === '/dashboard/patient' && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-l from-purple-900 via-slate-900 to-emerald-950 rounded-3xl p-6 text-white shadow-xl flex justify-between items-center">
+                    <div>
+                      <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-bold text-purple-200">بوابة المريض</span>
+                      <h2 className="text-2xl font-black mt-2">أهلاً بك، {selectedPatient.name} 🌸</h2>
+                      <div className="text-xs text-purple-200 mt-1">الهوية: {selectedPatient.nationalId} | فصيلة الدم: {selectedPatient.bloodGroup}</div>
+                    </div>
+                    <button onClick={() => { setSlotDate('2026-08-28'); setSlotTime('19:00'); setShowSlotModal(true); }} className="px-4 py-2 bg-emerald-500 text-slate-950 font-black text-xs rounded-xl">+ حجز موعد جديد</button>
                   </div>
-                  <div className="bg-white rounded-2xl border border-slate-200 p-4">
-                    <h3 className="text-xs font-bold mb-3">مراجعي اليوم</h3>
-                    <div className="space-y-2">
-                      {appointments.map(a => (
-                        <div key={a.id} className="p-3 bg-slate-50 rounded-xl flex justify-between items-center text-xs">
-                          <div>
-                            <span className="font-bold">{a.patientName}</span> - <span className="text-emerald-700 font-semibold">{a.serviceName} ({a.time})</span>
+
+                  <div className="flex bg-white p-1.5 rounded-2xl border gap-1 text-xs font-bold">
+                    <button onClick={() => setPatientTab('appointments')} className={"flex-1 py-2 rounded-xl " + (patientTab === 'appointments' ? 'bg-slate-900 text-white' : 'text-slate-600')}>مواعيدي</button>
+                    <button onClick={() => setPatientTab('emr')} className={"flex-1 py-2 rounded-xl " + (patientTab === 'emr' ? 'bg-emerald-600 text-white' : 'text-slate-600')}>سجلي الطبي EMR</button>
+                    <button onClick={() => setPatientTab('prescriptions')} className={"flex-1 py-2 rounded-xl " + (patientTab === 'prescriptions' ? 'bg-teal-600 text-white' : 'text-slate-600')}>الروشتات</button>
+                    <button onClick={() => setPatientTab('invoices')} className={"flex-1 py-2 rounded-xl " + (patientTab === 'invoices' ? 'bg-cyan-600 text-white' : 'text-slate-600')}>الفواتير</button>
+                  </div>
+
+                  {patientTab === 'appointments' && (
+                    <div className="space-y-3">
+                      {appointments.filter(a => a.patientName === selectedPatient.name).map(a => (
+                        <div key={a.id} className="p-4 bg-white rounded-2xl border flex justify-between items-center text-xs">
+                          <div><div className="font-bold">{a.serviceName}</div><div className="text-slate-500">{a.doctorName} • 📅 {a.date} ({a.time})</div></div>
+                          <div className="flex items-center gap-2">
+                            <span className="bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-xl font-bold">{a.statusLabel}</span>
+                            {a.status === 'scheduled' && <button onClick={() => handleCancelAppt(a.id)} className="text-rose-600 bg-rose-50 px-2 py-1 rounded-lg font-bold">إلغاء</button>}
                           </div>
-                          <button onClick={() => { const p = patients.find(pt => pt.id === a.patientId); if (p) setSelectedPatient(p); setCurrentPath('/patients'); }} className="px-3 py-1 rounded-lg bg-emerald-600 text-white font-bold">EMR</button>
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {patientTab === 'emr' && (
+                    <div className="bg-white rounded-3xl p-6 border space-y-4 text-xs">
+                      <div className="p-4 bg-emerald-50 rounded-2xl">
+                        <div className="font-bold text-emerald-950 mb-2">🦷 سجل الأسنان</div>
+                        {selectedPatient.dentalRecords?.map((r, i) => <div key={i} className="py-1">السن #{r.toothNumber}: <strong>{r.conditionLabel}</strong> ({r.date})</div>)}
+                      </div>
+                      <div className="p-4 bg-teal-50 rounded-2xl">
+                        <div className="font-bold text-teal-950 mb-2">✨ سجل الجلدية والليزر</div>
+                        {selectedPatient.dermatologyRecords?.map((r, i) => <div key={i} className="py-1">{r.treatment} - {r.parameters} ({r.date})</div>)}
+                      </div>
+                    </div>
+                  )}
+
+                  {patientTab === 'prescriptions' && (
+                    <div className="space-y-3">
+                      {prescriptions.filter(r => r.patientName === selectedPatient.name).map(rx => (
+                        <div key={rx.id} className="p-4 bg-white rounded-2xl border space-y-2 text-xs">
+                          <div className="flex justify-between font-bold"><span>{rx.diagnosis}</span><span className="font-mono">{rx.id}</span></div>
+                          {rx.items.map((it, i) => <div key={i} className="p-2 bg-emerald-50 rounded-xl font-medium">{it.drugName} - {it.dosage} ({it.frequency})</div>)}
+                          <button onClick={() => window.print()} className="px-3 py-1 bg-slate-900 text-white rounded-xl font-bold">طباعة</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {patientTab === 'invoices' && (
+                    <div className="space-y-3">
+                      {invoices.filter(i => i.patientName === selectedPatient.name).map(inv => (
+                        <div key={inv.id} className="p-4 bg-white rounded-2xl border flex justify-between items-center text-xs">
+                          <div><div className="font-mono font-bold">{inv.invoiceNumber}</div><div className="text-slate-500">{inv.date} • {inv.paymentMethodLabel}</div></div>
+                          <div className="text-left"><div className="text-base font-black text-teal-700">{inv.totalWithVat} ر.س</div><button onClick={() => window.print()} className="mt-1 px-3 py-1 bg-teal-600 text-white rounded-xl font-bold">طباعة</button></div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {currentPath === '/dashboard/owner' && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-l from-amber-950 via-slate-900 to-slate-950 rounded-3xl p-6 text-white shadow-xl flex justify-between items-center border border-amber-500/20">
+                    <div>
+                      <h2 className="text-2xl font-black">لوحة مالك المركز والعمولات 👑</h2>
+                      <p className="text-xs text-slate-300 mt-1">تقرير الأرباح وعمولات الأطباء ونظام ZATCA</p>
+                    </div>
+                    <div className="text-left font-mono font-black text-sm text-amber-300">{CLINIC_INFO.taxNumber}</div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">إجمالي الإيرادات 15%</div><div className="text-xl font-black mt-1">{totalClinicWithVat} ر.س</div></div>
+                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">عمولات الأطباء</div><div className="text-xl font-black mt-1 text-amber-700">{totalDoctorComms} ر.س</div></div>
+                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">صافي ربح المركز</div><div className="text-xl font-black mt-1 text-emerald-700">{totalClinicNetProfit} ر.س</div></div>
+                  </div>
+
+                  <div className="bg-white rounded-3xl border p-6 space-y-4">
+                    <h3 className="font-bold text-sm text-slate-900">وحدة متابعة أرباح وعمولات الأطباء</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-right text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 border-b text-slate-500 font-bold">
+                            <th className="p-3">الطبيب</th><th className="p-3">الراتب</th><th className="p-3 text-center">العمولة %</th><th className="p-3">الإيراد</th><th className="p-3">العمولة المستحقة</th><th className="p-3">إجمالي الاستحقاق</th><th className="p-3">صافي دخل المركز</th><th className="p-3 text-center">إجراء</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {doctorStats.map(doc => (
+                            <tr key={doc.id} className="hover:bg-slate-50">
+                              <td className="p-3 font-bold">{doc.name}</td>
+                              <td className="p-3 font-mono">{doc.baseSalary} ر.س</td>
+                              <td className="p-3 text-center font-mono font-bold">
+                                {editingDocId === doc.id ? (
+                                  <input type="number" value={tempRate} onChange={e => setTempRate(e.target.value)} className="w-14 p-1 border rounded text-center text-xs" />
+                                ) : (
+                                  <span className="bg-amber-50 text-amber-900 px-2 py-0.5 rounded font-black">{doc.commissionRate || 30}%</span>
+                                )}
+                              </td>
+                              <td className="p-3 font-mono font-bold">{doc.gross} ر.س</td>
+                              <td className="p-3 font-mono font-bold text-amber-700">{doc.commAmt} ر.س</td>
+                              <td className="p-3 font-mono font-black text-slate-900">{doc.payout} ر.س</td>
+                              <td className="p-3 font-mono font-black text-emerald-700">{doc.clinicNet} ر.س</td>
+                              <td className="p-3 text-center">
+                                {editingDocId === doc.id ? (
+                                  <button onClick={() => handleUpdateRate(doc.id)} className="px-2.5 py-1 bg-emerald-600 text-white rounded font-bold text-[11px]">حفظ</button>
+                                ) : (
+                                  <button onClick={() => { setEditingDocId(doc.id); setTempRate(String(doc.commissionRate || 30)); }} className="px-2 py-1 bg-slate-100 text-slate-700 rounded font-bold text-[11px]">تعديل</button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
               )}
 
               {currentPath === '/dashboard/reception' && (
-                <div className="space-y-4">
-                  <div className="bg-gradient-to-l from-teal-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl">
-                    <h2 className="text-xl font-extrabold">بوابة الاستقبال والمواعيد</h2>
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-l from-teal-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl flex justify-between items-center">
+                    <div>
+                      <h2 className="text-xl font-extrabold">كاونتر الاستقبال والتقويم التفاعلي</h2>
+                      <p className="text-xs text-teal-100 mt-1">حجز سريع ونقر على الخانات الشاغرة (Click-to-Add)</p>
+                    </div>
+                    <button onClick={() => { setSlotDate('2026-08-27'); setSlotTime('18:00'); setShowSlotModal(true); }} className="px-4 py-2 bg-teal-500 text-slate-950 font-black text-xs rounded-xl">+ حجز سريع</button>
                   </div>
-                  <div className="bg-white rounded-2xl border border-slate-200 p-4">
-                    <h3 className="text-xs font-bold mb-3">طابور الانتظار لليوم</h3>
+
+                  <div className="bg-white rounded-3xl border p-6 space-y-4">
+                    <h3 className="font-bold text-sm text-slate-900">جدول المواعيد الأسبوعي (انقر على أي خانة شاغرة للحجز)</h3>
+                    <div className="overflow-x-auto">
+                      <div className="min-w-[650px]">
+                        <div className="grid grid-cols-6 gap-2 text-center text-xs font-bold text-slate-600 mb-2">
+                          <div className="p-2 bg-slate-50 rounded-xl">الوقت</div>
+                          {weekDays.map(d => <div key={d.date} className="p-2 bg-slate-100 rounded-xl">{d.label} <span className="text-[10px] text-slate-400 block">{d.date}</span></div>)}
+                        </div>
+                        <div className="space-y-2">
+                          {timeSlots.map(timeStr => (
+                            <div key={timeStr} className="grid grid-cols-6 gap-2 items-stretch">
+                              <div className="p-2.5 bg-slate-50 rounded-xl flex items-center justify-center font-mono font-bold text-xs text-slate-500">{timeStr}</div>
+                              {weekDays.map(d => {
+                                const slotAppts = appointments.filter(a => a.date === d.date && a.time.startsWith(timeStr.substring(0, 2)));
+                                return (
+                                  <div
+                                    key={d.date}
+                                    onClick={() => { setSlotDate(d.date); setSlotTime(timeStr); setShowSlotModal(true); }}
+                                    className={"p-2 rounded-xl border text-xs cursor-pointer min-h-[56px] flex flex-col justify-center " + (
+                                      slotAppts.length > 0 ? 'bg-teal-50 border-teal-200' : 'bg-white border-slate-200 hover:border-teal-400 border-dashed text-center text-slate-400 text-[10px]'
+                                    )}
+                                  >
+                                    {slotAppts.length > 0 ? (
+                                      slotAppts.map(a => <div key={a.id} className="p-1 bg-teal-600 text-white rounded text-[10px] font-bold truncate">{a.patientName} ({a.time})</div>)
+                                    ) : (
+                                      <span>+ متاح</span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {currentPath === '/dashboard/doctor' && (
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-l from-emerald-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl">
+                    <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-bold">لوحة الطبيب</span>
+                    <h2 className="text-xl font-extrabold mt-2">أهلاً، {user.name} 🌸</h2>
+                    <p className="text-xs text-emerald-100">{user.specialtyName}</p>
+                  </div>
+                  <div className="bg-white rounded-2xl border p-4">
+                    <h3 className="text-xs font-bold mb-3">طابور كشف اليوم</h3>
                     <div className="space-y-2">
                       {appointments.map(a => (
                         <div key={a.id} className="p-3 bg-slate-50 rounded-xl flex justify-between items-center text-xs">
-                          <div><span className="font-bold">{a.patientName}</span> ({a.phone})</div>
-                          <select value={a.status} onChange={e => setAppointments(appointments.map(item => item.id === a.id ? { ...item, status: e.target.value } : item))} className="p-1 rounded-lg border text-xs">
-                            <option value="scheduled">مؤكد</option>
-                            <option value="waiting">في الانتظار</option>
-                            <option value="in-progress">في الكشف</option>
-                            <option value="completed">مكتمل</option>
-                          </select>
+                          <div><span className="font-bold">{a.patientName}</span> - <span className="text-emerald-700 font-semibold">{a.serviceName} ({a.time})</span></div>
+                          <button onClick={() => { const p = patients.find(pt => pt.id === a.patientId); if (p) setSelectedPatient(p); setCurrentPath('/patients'); }} className="px-3 py-1 rounded-lg bg-emerald-600 text-white font-bold">EMR</button>
                         </div>
                       ))}
                     </div>
@@ -285,19 +598,22 @@
                     <p className="text-xs text-slate-300 font-mono mt-1">الرقم الضريبي: {CLINIC_INFO.taxNumber}</p>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">الإجمالي شامل الضريبة</div><div className="text-xl font-black mt-1">{invoices.reduce((s,i) => s + i.totalWithVat, 0)} ر.س</div></div>
-                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">قبل الضريبة</div><div className="text-xl font-black mt-1 text-teal-700">{invoices.reduce((s,i) => s + i.subtotal, 0)} ر.س</div></div>
-                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">الضريبة 15%</div><div className="text-xl font-black mt-1 text-emerald-700">{invoices.reduce((s,i) => s + i.vatAmount, 0)} ر.س</div></div>
+                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">الإجمالي شامل الضريبة</div><div className="text-xl font-black mt-1">{totalClinicWithVat} ر.س</div></div>
+                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">قبل الضريبة</div><div className="text-xl font-black mt-1 text-teal-700">{totalClinicGross} ر.س</div></div>
+                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">الضريبة 15%</div><div className="text-xl font-black mt-1 text-emerald-700">{totalClinicVat} ر.س</div></div>
                   </div>
                 </div>
               )}
 
               {currentPath === '/appointments' && (
                 <div className="space-y-4">
-                  <h2 className="text-lg font-black text-slate-900">جدول المواعيد والحجوزات (/appointments)</h2>
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-lg font-black text-slate-900">جدول المواعيد والتقويم التفاعلي</h2>
+                    <button onClick={() => { setSlotDate('2026-08-27'); setSlotTime('18:00'); setShowSlotModal(true); }} className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold">+ حجز موعد</button>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {appointments.map(a => (
-                      <div key={a.id} className="p-4 bg-white rounded-2xl border border-slate-200 space-y-1 text-xs">
+                      <div key={a.id} className="p-4 bg-white rounded-2xl border space-y-1 text-xs">
                         <div className="flex justify-between font-bold text-slate-900"><span>{a.patientName}</span><span className="font-mono">{a.time}</span></div>
                         <div className="text-emerald-800 font-semibold">{a.serviceName} ({a.price} ر.س)</div>
                         <div className="text-[11px] text-slate-500">{a.doctorName}</div>
@@ -309,11 +625,11 @@
 
               {currentPath === '/patients' && (
                 <div className="space-y-4">
-                  <h2 className="text-lg font-black text-slate-900">سجل المرضى والملف الطبي EMR (/patients)</h2>
+                  <h2 className="text-lg font-black text-slate-900">سجل المرضى والملف الطبي EMR</h2>
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                     <div className="lg:col-span-4 space-y-2">
                       {patients.map(p => (
-                        <div key={p.id} onClick={() => setSelectedPatient(p)} className={`p-3 rounded-2xl border cursor-pointer text-xs ${selectedPatient?.id === p.id ? 'bg-emerald-50 border-emerald-500 font-bold' : 'bg-white'}`}>
+                        <div key={p.id} onClick={() => setSelectedPatient(p)} className={"p-3 rounded-2xl border cursor-pointer text-xs " + (selectedPatient?.id === p.id ? 'bg-emerald-50 border-emerald-500 font-bold' : 'bg-white')}>
                           <div>{p.name}</div>
                           <div className="text-[10px] text-slate-500 font-mono" dir="ltr">{p.phone}</div>
                         </div>
@@ -321,7 +637,7 @@
                     </div>
                     <div className="lg:col-span-8 space-y-4">
                       {selectedPatient && (
-                        <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4">
+                        <div className="bg-white rounded-3xl border p-6 space-y-4">
                           <div className="border-b pb-3 flex justify-between items-center">
                             <div><h3 className="font-bold text-sm text-slate-900">{selectedPatient.name}</h3><span className="text-xs text-slate-500">هوية: {selectedPatient.nationalId} | عمر: {selectedPatient.age}</span></div>
                             <span className="text-xs bg-rose-50 text-rose-700 px-2 py-1 rounded-lg font-bold">حساسية: {selectedPatient.allergies}</span>
@@ -330,7 +646,7 @@
                             <span className="text-xs font-bold text-emerald-400">🦷 مخطط الأسنان التفاعلي (32 سن FDI)</span>
                             <div className="grid grid-cols-8 gap-1 text-center">
                               {[18,17,16,15,14,13,12,11, 21,22,23,24,25,26,27,28, 48,47,46,45,44,43,42,41, 31,32,33,34,35,36,37,38].map(num => (
-                                <button key={num} onClick={() => setSelectedTooth(num)} className={`h-8 rounded-lg font-mono text-xs font-bold border ${selectedTooth === num ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-300'}`}>{num}</button>
+                                <button key={num} onClick={() => setSelectedTooth(num)} className={"h-8 rounded-lg font-mono text-xs font-bold border " + (selectedTooth === num ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-300')}>{num}</button>
                               ))}
                             </div>
                             {selectedTooth && (
@@ -355,11 +671,11 @@
 
               {currentPath === '/prescriptions' && (
                 <div className="space-y-4">
-                  <h2 className="text-lg font-black text-slate-900">الروشتات والوصفات الطبية (/prescriptions)</h2>
+                  <h2 className="text-lg font-black text-slate-900">الروشتات والوصفات الطبية</h2>
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                     <div className="lg:col-span-5 space-y-2">
                       {prescriptions.map(r => (
-                        <div key={r.id} onClick={() => setSelectedRx(r)} className={`p-3 rounded-2xl border cursor-pointer text-xs ${selectedRx?.id === r.id ? 'bg-emerald-50 border-emerald-500 font-bold' : 'bg-white'}`}>
+                        <div key={r.id} onClick={() => setSelectedRx(r)} className={"p-3 rounded-2xl border cursor-pointer text-xs " + (selectedRx?.id === r.id ? 'bg-emerald-50 border-emerald-500 font-bold' : 'bg-white')}>
                           <div>{r.patientName}</div>
                           <div className="text-[11px] text-emerald-800">{r.diagnosis}</div>
                         </div>
@@ -367,7 +683,7 @@
                     </div>
                     <div className="lg:col-span-7">
                       {selectedRx && (
-                        <div className="bg-white p-6 rounded-3xl border border-slate-200 space-y-4 text-xs">
+                        <div className="bg-white p-6 rounded-3xl border space-y-4 text-xs">
                           <div className="flex justify-between border-b pb-3 font-bold text-sm"><span>{CLINIC_INFO.name}</span><button onClick={() => window.print()} className="px-3 py-1 bg-emerald-600 text-white rounded-xl">طباعة</button></div>
                           <div><strong>المريض:</strong> {selectedRx.patientName} | <strong>التشخيص:</strong> {selectedRx.diagnosis}</div>
                           <div className="space-y-2">
@@ -385,11 +701,11 @@
 
               {currentPath === '/invoices' && (
                 <div className="space-y-4">
-                  <h2 className="text-lg font-black text-slate-900">الفواتير الضريبية 15% ZATCA (/invoices)</h2>
+                  <h2 className="text-lg font-black text-slate-900">الفواتير الضريبية 15% ZATCA</h2>
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                     <div className="lg:col-span-5 space-y-2">
                       {invoices.map(inv => (
-                        <div key={inv.id} onClick={() => setSelectedInv(inv)} className={`p-3 rounded-2xl border cursor-pointer text-xs ${selectedInv?.id === inv.id ? 'bg-teal-50 border-teal-500 font-bold' : 'bg-white'}`}>
+                        <div key={inv.id} onClick={() => setSelectedInv(inv)} className={"p-3 rounded-2xl border cursor-pointer text-xs " + (selectedInv?.id === inv.id ? 'bg-teal-50 border-teal-500 font-bold' : 'bg-white')}>
                           <div>{inv.patientName}</div>
                           <div className="text-[10px] text-teal-800 font-mono">{inv.invoiceNumber} • {inv.totalWithVat} ر.س</div>
                         </div>
@@ -397,7 +713,7 @@
                     </div>
                     <div className="lg:col-span-7">
                       {selectedInv && (
-                        <div className="bg-white p-6 rounded-3xl border border-slate-200 space-y-4 text-xs">
+                        <div className="bg-white p-6 rounded-3xl border space-y-4 text-xs">
                           <div className="flex justify-between border-b pb-3 font-bold text-sm"><span>فاتورة ضريبية مبسطة (15% VAT)</span><button onClick={() => window.print()} className="px-3 py-1 bg-teal-600 text-white rounded-xl">طباعة</button></div>
                           <div><strong>المريض:</strong> {selectedInv.patientName} | <strong>رقم الفاتورة:</strong> <span className="font-mono">{selectedInv.invoiceNumber}</span></div>
                           <div className="space-y-1">
@@ -419,43 +735,82 @@
 
               {currentPath === '/whatsapp-notifications' && (
                 <div className="space-y-4">
-                  <h2 className="text-lg font-black text-slate-900">إشعارات وربط الواتساب (/whatsapp)</h2>
-                  <div className="bg-white p-6 rounded-3xl border border-slate-200 space-y-4 text-xs">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <h2 className="text-lg font-black text-slate-900">إشعارات وتنبيهات الواتساب</h2>
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                    <div className="lg:col-span-7 bg-white p-5 rounded-3xl border space-y-3 text-xs">
                       <div>
-                        <label className="block font-bold mb-1">اختر المريض:</label>
+                        <label className="block font-bold mb-1">المريض</label>
                         <select value={waPatientId} onChange={e => setWaPatientId(e.target.value)} className="w-full p-2 border rounded-xl">
-                          {patients.map(p => <option key={p.id} value={p.id}>{p.name} ({p.phone})</option>)}
+                          {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="block font-bold mb-1">اختر قالب الرسالة:</label>
-                        <select value={waTplId} onChange={e => setWaTplId(e.target.value)} className="w-full p-2 border rounded-xl">
-                          {WHATSAPP_TEMPLATES.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
-                        </select>
+                        <label className="block font-bold mb-1">القالب</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {WHATSAPP_TEMPLATES.map(t => (
+                            <button key={t.id} onClick={() => setWaTplId(t.id)} className={"p-2 rounded-xl border text-right font-bold " + (waTplId === t.id ? 'bg-emerald-50 border-emerald-500' : 'bg-slate-50')}>{t.title}</button>
+                          ))}
+                        </div>
                       </div>
+                      <div>
+                        <label className="block font-bold mb-1">نص الرسالة</label>
+                        <textarea rows="5" value={waMessage} onChange={e => setWaMessage(e.target.value)} className="w-full p-2.5 bg-slate-50 border rounded-2xl" />
+                      </div>
+                      <button onClick={() => { let clean = waPhone.replace(/[^0-9]/g, ''); if (clean.startsWith('05')) clean = '966' + clean.substring(1); else if (clean.startsWith('5')) clean = '966' + clean; window.open('https://wa.me/' + clean + '?text=' + encodeURIComponent(waMessage), '_blank'); }} className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-2xl">إرسال عبر واتساب الآن 🚀</button>
                     </div>
-                    <div>
-                      <label className="block font-bold mb-1">رقم الجوال:</label>
-                      <input type="text" value={waPhone} onChange={e => setWaPhone(e.target.value)} className="w-full p-2 border rounded-xl font-mono" dir="ltr" />
+                    <div className="lg:col-span-5 bg-slate-900 p-4 rounded-3xl text-white flex flex-col justify-between">
+                      <div className="text-xs font-bold text-emerald-400 mb-2">معاينة الرسالة</div>
+                      <div className="bg-[#0b141a] p-3 rounded-2xl text-xs"><div className="bg-[#005c4b] p-3 rounded-2xl rounded-tr-none whitespace-pre-wrap">{waMessage}</div></div>
+                      <div className="text-[10px] text-slate-500 text-center mt-2">فتح فوري في واتساب</div>
                     </div>
-                    <div>
-                      <label className="block font-bold mb-1">نص الرسالة الجاهزة:</label>
-                      <textarea rows="5" value={waMessage} onChange={e => setWaMessage(e.target.value)} className="w-full p-3 border rounded-xl font-mono text-right" />
-                    </div>
-                    <button onClick={handleSendWhatsApp} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl transition flex items-center justify-center gap-2">
-                      <span>إرسال عبر واتساب (WAHA / Web API)</span> 💬
-                    </button>
                   </div>
                 </div>
               )}
             </main>
           </div>
+
+          {showSlotModal && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border text-right text-xs space-y-3">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h3 className="font-bold text-sm text-slate-900">حجز موعد ({slotDate} - {slotTime})</h3>
+                  <button onClick={() => setShowSlotModal(false)} className="text-slate-400 font-bold">✕</button>
+                </div>
+                <form onSubmit={handleSaveSlot} className="space-y-3">
+                  <div>
+                    <label className="block font-bold mb-1">المريض</label>
+                    <select value={slotPatientId} onChange={e => setSlotPatientId(e.target.value)} className="w-full p-2 border rounded-xl">
+                      {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1">العيادة والتخصص</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button" onClick={() => { setSlotSpecialty('dental'); setSlotDoctor('د. فهد العنزي'); setSlotService('كشف استشاري وخطة علاج أسنان'); }} className={"p-2 rounded-xl border font-bold " + (slotSpecialty === 'dental' ? 'bg-emerald-600 text-white' : 'bg-slate-50')}>🦷 طب الأسنان</button>
+                      <button type="button" onClick={() => { setSlotSpecialty('dermatology'); setSlotDoctor('د. سلمى الشمري'); setSlotService('كشف استشارية الجلدية وتشخيص البشرة'); }} className={"p-2 rounded-xl border font-bold " + (slotSpecialty === 'dermatology' ? 'bg-teal-600 text-white' : 'bg-slate-50')}>✨ الجلدية والتجميل</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1">الطبيب</label>
+                    <input type="text" readOnly value={slotDoctor} className="w-full p-2 bg-slate-100 border rounded-xl font-bold" />
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1">الخدمة</label>
+                    <input type="text" value={slotService} onChange={e => setSlotService(e.target.value)} className="w-full p-2 border rounded-xl" />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button type="button" onClick={() => setShowSlotModal(false)} className="px-3 py-1.5 rounded-xl border font-bold">إلغاء</button>
+                    <button type="submit" className="px-4 py-1.5 rounded-xl bg-emerald-600 text-white font-bold">تأكيد الحجز</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
 
-    ReactDOM.render(<App />, document.getElementById('root'));
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
 </body>
 </html>
