@@ -408,55 +408,79 @@
                   <div className="flex bg-white p-1.5 rounded-2xl border gap-1 text-xs font-bold">
                     <button onClick={() => setPatientTab('appointments')} className={"flex-1 py-2 rounded-xl " + (patientTab === 'appointments' ? 'bg-slate-900 text-white' : 'text-slate-600')}>مواعيدي</button>
                     <button onClick={() => setPatientTab('emr')} className={"flex-1 py-2 rounded-xl " + (patientTab === 'emr' ? 'bg-emerald-600 text-white' : 'text-slate-600')}>سجلي الطبي EMR</button>
-                    <button onClick={() => setPatientTab('prescriptions')} className={"flex-1 py-2 rounded-xl " + (patientTab === 'prescriptions' ? 'bg-teal-600 text-white' : 'text-slate-600')}>الروشتات</button>
-                    <button onClick={() => setPatientTab('invoices')} className={"flex-1 py-2 rounded-xl " + (patientTab === 'invoices' ? 'bg-cyan-600 text-white' : 'text-slate-600')}>الفواتير</button>
+                    <button onClick={() => setPatientTab('prescriptions')} className={"flex-1 py-2 rounded-xl " + (patientTab === 'prescriptions' ? 'bg-teal-600 text-white' : 'text-slate-600')}>روشتاتي</button>
+                    <button onClick={() => setPatientTab('invoices')} className={"flex-1 py-2 rounded-xl " + (patientTab === 'invoices' ? 'bg-cyan-600 text-white' : 'text-slate-600')}>فواتيري</button>
                   </div>
 
                   {patientTab === 'appointments' && (
-                    <div className="space-y-3">
-                      {appointments.filter(a => a.patientName === selectedPatient.name).map(a => (
-                        <div key={a.id} className="p-4 bg-white rounded-2xl border flex justify-between items-center text-xs">
-                          <div><div className="font-bold">{a.serviceName}</div><div className="text-slate-500">{a.doctorName} • 📅 {a.date} ({a.time})</div></div>
-                          <div className="flex items-center gap-2">
-                            <span className="bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-xl font-bold">{a.statusLabel}</span>
-                            {a.status === 'scheduled' && <button onClick={() => handleCancelAppt(a.id)} className="text-rose-600 bg-rose-50 px-2 py-1 rounded-lg font-bold">إلغاء</button>}
+                    <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4">
+                      <h3 className="text-sm font-black text-slate-900">مواعيدك القادمة والسابقة</h3>
+                      <div className="space-y-3">
+                        {appointments.filter(a => a.patientId === selectedPatient.id).map(a => (
+                          <div key={a.id} className="p-4 rounded-xl border bg-slate-50 flex justify-between items-center text-xs">
+                            <div>
+                              <div className="font-black text-slate-900">{a.serviceName}</div>
+                              <div className="text-slate-500 mt-0.5">مع الطبيب: {a.doctorName} | التاريخ: {a.date} ({a.time})</div>
+                            </div>
+                            <span className="px-3 py-1 bg-emerald-100 text-emerald-700 font-bold rounded-lg">{a.statusLabel}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {patientTab === 'emr' && (
+                    <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
+                      <h3 className="text-sm font-black text-slate-900">الملف الصحي الإلكتروني (EMR)</h3>
+                      <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
+                        <div><span className="text-slate-500">الحساسية:</span> <strong className="text-rose-600">{selectedPatient.allergies}</strong></div>
+                        <div><span className="text-slate-500">الأمراض المزمنة:</span> <strong>{selectedPatient.chronicDiseases}</strong></div>
+                      </div>
+                      <h4 className="font-bold mt-4">سجل العناية والتجميل والأسنان:</h4>
+                      <div className="space-y-2">
+                        {selectedPatient.dermatologyRecords.map((r, i) => (
+                          <div key={i} className="p-3 border rounded-xl bg-teal-50/50">
+                            <div className="font-bold text-teal-900">{r.treatment} ({r.date})</div>
+                            <div className="text-slate-600 mt-1">الطبيب: {r.doctor} | المعايير: {r.parameters}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {patientTab === 'prescriptions' && (
+                    <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
+                      <h3 className="text-sm font-black text-slate-900">الروشتات الطبية الإلكترونية</h3>
+                      {prescriptions.filter(r => r.patientId === selectedPatient.id).map(r => (
+                        <div key={r.id} className="p-4 border rounded-xl bg-slate-50 space-y-2">
+                          <div className="flex justify-between font-bold">
+                            <span>{r.diagnosis}</span>
+                            <span className="text-emerald-600">{r.id}</span>
+                          </div>
+                          <div className="text-slate-500">الطبيب: {r.doctorName} ({r.doctorTitle}) - {r.date}</div>
+                          <div className="pt-2 border-t space-y-1">
+                            {r.items.map((it, idx) => (
+                              <div key={idx} className="flex justify-between bg-white p-2 rounded border">
+                                <span className="font-bold text-slate-800">{it.drugName}</span>
+                                <span className="text-slate-600">{it.dosage} - {it.frequency} ({it.duration})</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
 
-                  {patientTab === 'emr' && (
-                    <div className="bg-white rounded-3xl p-6 border space-y-4 text-xs">
-                      <div className="p-4 bg-emerald-50 rounded-2xl">
-                        <div className="font-bold text-emerald-950 mb-2">🦷 سجل الأسنان</div>
-                        {selectedPatient.dentalRecords?.map((r, i) => <div key={i} className="py-1">السن #{r.toothNumber}: <strong>{r.conditionLabel}</strong> ({r.date})</div>)}
-                      </div>
-                      <div className="p-4 bg-teal-50 rounded-2xl">
-                        <div className="font-bold text-teal-950 mb-2">✨ سجل الجلدية والليزر</div>
-                        {selectedPatient.dermatologyRecords?.map((r, i) => <div key={i} className="py-1">{r.treatment} - {r.parameters} ({r.date})</div>)}
-                      </div>
-                    </div>
-                  )}
-
-                  {patientTab === 'prescriptions' && (
-                    <div className="space-y-3">
-                      {prescriptions.filter(r => r.patientName === selectedPatient.name).map(rx => (
-                        <div key={rx.id} className="p-4 bg-white rounded-2xl border space-y-2 text-xs">
-                          <div className="flex justify-between font-bold"><span>{rx.diagnosis}</span><span className="font-mono">{rx.id}</span></div>
-                          {rx.items.map((it, i) => <div key={i} className="p-2 bg-emerald-50 rounded-xl font-medium">{it.drugName} - {it.dosage} ({it.frequency})</div>)}
-                          <button onClick={() => window.print()} className="px-3 py-1 bg-slate-900 text-white rounded-xl font-bold">طباعة</button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
                   {patientTab === 'invoices' && (
-                    <div className="space-y-3">
-                      {invoices.filter(i => i.patientName === selectedPatient.name).map(inv => (
-                        <div key={inv.id} className="p-4 bg-white rounded-2xl border flex justify-between items-center text-xs">
-                          <div><div className="font-mono font-bold">{inv.invoiceNumber}</div><div className="text-slate-500">{inv.date} • {inv.paymentMethodLabel}</div></div>
-                          <div className="text-left"><div className="text-base font-black text-teal-700">{inv.totalWithVat} ر.س</div><button onClick={() => window.print()} className="mt-1 px-3 py-1 bg-teal-600 text-white rounded-xl font-bold">طباعة</button></div>
+                    <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
+                      <h3 className="text-sm font-black text-slate-900">الفواتير الضريبية (ZATCA)</h3>
+                      {invoices.filter(i => i.patientId === selectedPatient.id).map(inv => (
+                        <div key={inv.id} className="p-4 border rounded-xl bg-slate-50 space-y-2">
+                          <div className="flex justify-between font-bold">
+                            <span>{inv.invoiceNumber}</span>
+                            <span className="text-cyan-700">{inv.totalWithVat} ريال (شامل الضريبة)</span>
+                          </div>
+                          <div className="text-slate-500">التاريخ: {inv.date} | طريقة الدفع: {inv.paymentMethodLabel}</div>
                         </div>
                       ))}
                     </div>
@@ -464,58 +488,56 @@
                 </div>
               )}
 
-              {currentPath === '/dashboard/owner' && (
+              {currentPath === '/dashboard/doctor' && (
                 <div className="space-y-6">
-                  <div className="bg-gradient-to-l from-amber-950 via-slate-900 to-slate-950 rounded-3xl p-6 text-white shadow-xl flex justify-between items-center border border-amber-500/20">
+                  <div className="bg-gradient-to-l from-emerald-900 via-slate-900 to-teal-950 rounded-3xl p-6 text-white shadow-xl flex justify-between items-center">
                     <div>
-                      <h2 className="text-2xl font-black">لوحة مالك المركز والعمولات 👑</h2>
-                      <p className="text-xs text-slate-300 mt-1">تقرير الأرباح وعمولات الأطباء ونظام ZATCA</p>
+                      <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-bold text-emerald-300">عيادة الطبيب</span>
+                      <h2 className="text-2xl font-black mt-2">مرحباً بك، {user.name} 🩺</h2>
+                      <div className="text-xs text-emerald-200 mt-1">{user.specialtyName} • جاهز لاستقبال الحالات</div>
                     </div>
-                    <div className="text-left font-mono font-black text-sm text-amber-300">{CLINIC_INFO.taxNumber}</div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">إجمالي الإيرادات 15%</div><div className="text-xl font-black mt-1">{totalClinicWithVat} ر.س</div></div>
-                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">عمولات الأطباء</div><div className="text-xl font-black mt-1 text-amber-700">{totalDoctorComms} ر.س</div></div>
-                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">صافي ربح المركز</div><div className="text-xl font-black mt-1 text-emerald-700">{totalClinicNetProfit} ر.س</div></div>
-                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-1 bg-white p-6 rounded-2xl border shadow-sm space-y-4 text-xs">
+                      <h3 className="font-black text-slate-900">قائمة الانتظار في العيادة</h3>
+                      <div className="space-y-2">
+                        {appointments.filter(a => a.doctorId === user.id || a.status === 'in-progress' || a.status === 'waiting').map(a => (
+                          <div key={a.id} className="p-3 border rounded-xl bg-slate-50 flex justify-between items-center">
+                            <div>
+                              <div className="font-bold text-slate-900">{a.patientName}</div>
+                              <div className="text-[10px] text-slate-500">{a.serviceName} ({a.time})</div>
+                            </div>
+                            <span className="px-2 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded">{a.statusLabel}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
 
-                  <div className="bg-white rounded-3xl border p-6 space-y-4">
-                    <h3 className="font-bold text-sm text-slate-900">وحدة متابعة أرباح وعمولات الأطباء</h3>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-right text-xs border-collapse">
-                        <thead>
-                          <tr className="bg-slate-50 border-b text-slate-500 font-bold">
-                            <th className="p-3">الطبيب</th><th className="p-3">الراتب</th><th className="p-3 text-center">العمولة %</th><th className="p-3">الإيراد</th><th className="p-3">العمولة المستحقة</th><th className="p-3">إجمالي الاستحقاق</th><th className="p-3">صافي دخل المركز</th><th className="p-3 text-center">إجراء</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                          {doctorStats.map(doc => (
-                            <tr key={doc.id} className="hover:bg-slate-50">
-                              <td className="p-3 font-bold">{doc.name}</td>
-                              <td className="p-3 font-mono">{doc.baseSalary} ر.س</td>
-                              <td className="p-3 text-center font-mono font-bold">
-                                {editingDocId === doc.id ? (
-                                  <input type="number" value={tempRate} onChange={e => setTempRate(e.target.value)} className="w-14 p-1 border rounded text-center text-xs" />
-                                ) : (
-                                  <span className="bg-amber-50 text-amber-900 px-2 py-0.5 rounded font-black">{doc.commissionRate || 30}%</span>
-                                )}
-                              </td>
-                              <td className="p-3 font-mono font-bold">{doc.gross} ر.س</td>
-                              <td className="p-3 font-mono font-bold text-amber-700">{doc.commAmt} ر.س</td>
-                              <td className="p-3 font-mono font-black text-slate-900">{doc.payout} ر.س</td>
-                              <td className="p-3 font-mono font-black text-emerald-700">{doc.clinicNet} ر.س</td>
-                              <td className="p-3 text-center">
-                                {editingDocId === doc.id ? (
-                                  <button onClick={() => handleUpdateRate(doc.id)} className="px-2.5 py-1 bg-emerald-600 text-white rounded font-bold text-[11px]">حفظ</button>
-                                ) : (
-                                  <button onClick={() => { setEditingDocId(doc.id); setTempRate(String(doc.commissionRate || 30)); }} className="px-2 py-1 bg-slate-100 text-slate-700 rounded font-bold text-[11px]">تعديل</button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="lg:col-span-2 bg-white p-6 rounded-2xl border shadow-sm space-y-4 text-xs">
+                      <h3 className="font-black text-slate-900">تشخيص الأسنان التفاعلي (Dental Odontogram)</h3>
+                      <p className="text-slate-500">اختر السن وسجل الحالة (علاج عصب، حشوة، تركيبات):</p>
+                      <div className="grid grid-cols-8 gap-2">
+                        {[18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28].map(n => (
+                          <button key={n} onClick={() => setSelectedTooth(n)} className={"p-3 rounded-xl border font-mono font-bold text-center transition " + (selectedTooth === n ? 'bg-emerald-600 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-800')}>
+                            #{n}
+                          </button>
+                        ))}
+                      </div>
+                      {selectedTooth && (
+                        <form onSubmit={handleSaveTooth} className="space-y-3 pt-4 border-t">
+                          <div className="font-bold text-emerald-700">تسجيل إجراء للسن رقم: #{selectedTooth}</div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <select value={toothCond} onChange={e => setToothCond(e.target.value)} className="p-2 border rounded-xl">
+                              <option value="composite-filling">حشوة تجميلية</option>
+                              <option value="root-canal">علاج عصب</option>
+                              <option value="crown">تاج زيركون</option>
+                            </select>
+                            <input type="text" value={toothNote} onChange={e => setToothNote(e.target.value)} placeholder="ملاحظات إضافية..." className="p-2 border rounded-xl" />
+                          </div>
+                          <button type="submit" className="w-full py-2.5 bg-emerald-600 text-white font-black rounded-xl">حفظ التشخيص في سجل المريض</button>
+                        </form>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -523,67 +545,28 @@
 
               {currentPath === '/dashboard/reception' && (
                 <div className="space-y-6">
-                  <div className="bg-gradient-to-l from-teal-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl flex justify-between items-center">
+                  <div className="bg-gradient-to-l from-teal-950 via-slate-900 to-cyan-950 rounded-3xl p-6 text-white shadow-xl flex justify-between items-center">
                     <div>
-                      <h2 className="text-xl font-extrabold">كاونتر الاستقبال والتقويم التفاعلي</h2>
-                      <p className="text-xs text-teal-100 mt-1">حجز سريع ونقر على الخانات الشاغرة (Click-to-Add)</p>
+                      <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-bold text-teal-300">مكتب الاستقبال</span>
+                      <h2 className="text-2xl font-black mt-2">إدارة المواعيد والمرضى 📅</h2>
+                      <div className="text-xs text-teal-200 mt-1">حجز المواعيد السريعة وإصدار الفواتير</div>
                     </div>
-                    <button onClick={() => { setSlotDate('2026-08-27'); setSlotTime('18:00'); setShowSlotModal(true); }} className="px-4 py-2 bg-teal-500 text-slate-950 font-black text-xs rounded-xl">+ حجز سريع</button>
+                    <button onClick={() => setShowSlotModal(true)} className="px-4 py-2 bg-teal-500 text-slate-950 font-black text-xs rounded-xl">+ حجز موعد جديد</button>
                   </div>
 
-                  <div className="bg-white rounded-3xl border p-6 space-y-4">
-                    <h3 className="font-bold text-sm text-slate-900">جدول المواعيد الأسبوعي (انقر على أي خانة شاغرة للحجز)</h3>
-                    <div className="overflow-x-auto">
-                      <div className="min-w-[650px]">
-                        <div className="grid grid-cols-6 gap-2 text-center text-xs font-bold text-slate-600 mb-2">
-                          <div className="p-2 bg-slate-50 rounded-xl">الوقت</div>
-                          {weekDays.map(d => <div key={d.date} className="p-2 bg-slate-100 rounded-xl">{d.label} <span className="text-[10px] text-slate-400 block">{d.date}</span></div>)}
-                        </div>
-                        <div className="space-y-2">
-                          {timeSlots.map(timeStr => (
-                            <div key={timeStr} className="grid grid-cols-6 gap-2 items-stretch">
-                              <div className="p-2.5 bg-slate-50 rounded-xl flex items-center justify-center font-mono font-bold text-xs text-slate-500">{timeStr}</div>
-                              {weekDays.map(d => {
-                                const slotAppts = appointments.filter(a => a.date === d.date && a.time.startsWith(timeStr.substring(0, 2)));
-                                return (
-                                  <div
-                                    key={d.date}
-                                    onClick={() => { setSlotDate(d.date); setSlotTime(timeStr); setShowSlotModal(true); }}
-                                    className={"p-2 rounded-xl border text-xs cursor-pointer min-h-[56px] flex flex-col justify-center " + (
-                                      slotAppts.length > 0 ? 'bg-teal-50 border-teal-200' : 'bg-white border-slate-200 hover:border-teal-400 border-dashed text-center text-slate-400 text-[10px]'
-                                    )}
-                                  >
-                                    {slotAppts.length > 0 ? (
-                                      slotAppts.map(a => <div key={a.id} className="p-1 bg-teal-600 text-white rounded text-[10px] font-bold truncate">{a.patientName} ({a.time})</div>)
-                                    ) : (
-                                      <span>+ متاح</span>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {currentPath === '/dashboard/doctor' && (
-                <div className="space-y-4">
-                  <div className="bg-gradient-to-l from-emerald-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl">
-                    <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-bold">لوحة الطبيب</span>
-                    <h2 className="text-xl font-extrabold mt-2">أهلاً، {user.name} 🌸</h2>
-                    <p className="text-xs text-emerald-100">{user.specialtyName}</p>
-                  </div>
-                  <div className="bg-white rounded-2xl border p-4">
-                    <h3 className="text-xs font-bold mb-3">طابور كشف اليوم</h3>
+                  <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
+                    <h3 className="font-black text-slate-900">جدول مواعيد اليوم في المركز</h3>
                     <div className="space-y-2">
                       {appointments.map(a => (
-                        <div key={a.id} className="p-3 bg-slate-50 rounded-xl flex justify-between items-center text-xs">
-                          <div><span className="font-bold">{a.patientName}</span> - <span className="text-emerald-700 font-semibold">{a.serviceName} ({a.time})</span></div>
-                          <button onClick={() => { const p = patients.find(pt => pt.id === a.patientId); if (p) setSelectedPatient(p); setCurrentPath('/patients'); }} className="px-3 py-1 rounded-lg bg-emerald-600 text-white font-bold">EMR</button>
+                        <div key={a.id} className="p-4 border rounded-xl bg-slate-50 flex justify-between items-center">
+                          <div>
+                            <div className="font-black text-slate-900">{a.patientName} - {a.serviceName}</div>
+                            <div className="text-slate-500 mt-0.5">الطبيب: {a.doctorName} | الموعد: {a.date} ({a.time})</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-lg">{a.statusLabel}</span>
+                            <button onClick={() => handleCancelAppt(a.id)} className="px-2.5 py-1 bg-rose-50 text-rose-600 rounded font-bold hover:bg-rose-100">إلغاء</button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -592,176 +575,200 @@
               )}
 
               {currentPath === '/dashboard/finance' && (
-                <div className="space-y-4">
-                  <div className="bg-gradient-to-l from-slate-900 to-cyan-950 rounded-3xl p-6 text-white shadow-xl">
-                    <h2 className="text-xl font-extrabold">التقارير المالية والضريبية ZATCA (15% VAT)</h2>
-                    <p className="text-xs text-slate-300 font-mono mt-1">الرقم الضريبي: {CLINIC_INFO.taxNumber}</p>
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-l from-cyan-950 via-slate-900 to-blue-950 rounded-3xl p-6 text-white shadow-xl">
+                    <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-bold text-cyan-300">الإدارة المالية</span>
+                    <h2 className="text-2xl font-black mt-2">التقارير المحاسبية وضريبة 15% ZATCA 💼</h2>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">الإجمالي شامل الضريبة</div><div className="text-xl font-black mt-1">{totalClinicWithVat} ر.س</div></div>
-                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">قبل الضريبة</div><div className="text-xl font-black mt-1 text-teal-700">{totalClinicGross} ر.س</div></div>
-                    <div className="bg-white p-4 rounded-2xl border text-center"><div className="text-xs text-slate-500 font-bold">الضريبة 15%</div><div className="text-xl font-black mt-1 text-emerald-700">{totalClinicVat} ر.س</div></div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div className="bg-white p-5 rounded-2xl border shadow-sm">
+                      <div className="text-slate-500">إجمالي الإيرادات (قبل الضريبة)</div>
+                      <div className="text-2xl font-black text-slate-900 mt-1">{totalClinicGross} ريال</div>
+                    </div>
+                    <div className="bg-white p-5 rounded-2xl border shadow-sm">
+                      <div className="text-slate-500">إجمالي ضريبة القيمة المضافة (15%)</div>
+                      <div className="text-2xl font-black text-emerald-600 mt-1">{totalClinicVat} ريال</div>
+                    </div>
+                    <div className="bg-white p-5 rounded-2xl border shadow-sm">
+                      <div className="text-slate-500">إجمالي الإيرادات (شامل الضريبة)</div>
+                      <div className="text-2xl font-black text-cyan-700 mt-1">{totalClinicWithVat} ريال</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
+                    <h3 className="font-black text-slate-900">سجل الفواتير الضريبية الإلكترونية</h3>
+                    <div className="space-y-2">
+                      {invoices.map(inv => (
+                        <div key={inv.id} className="p-4 border rounded-xl bg-slate-50 flex justify-between items-center">
+                          <div>
+                            <div className="font-black text-slate-900">{inv.invoiceNumber} - {inv.patientName}</div>
+                            <div className="text-slate-500 mt-0.5">الطبيب: {inv.doctorName} | التاريخ: {inv.date}</div>
+                          </div>
+                          <div className="text-left font-mono font-bold text-cyan-700">
+                            {inv.totalWithVat} ريال (شامل 15%)
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {currentPath === '/dashboard/owner' && (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-l from-amber-950 via-slate-900 to-orange-950 rounded-3xl p-6 text-white shadow-xl">
+                    <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-bold text-amber-300">لوحة المالك والمدير العام</span>
+                    <h2 className="text-2xl font-black mt-2">أرباح المركز وعمولات الأطباء 👑</h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div className="bg-white p-5 rounded-2xl border shadow-sm">
+                      <div className="text-slate-500">إجمالي إيرادات العيادة</div>
+                      <div className="text-2xl font-black text-slate-900 mt-1">{totalClinicGross} ريال</div>
+                    </div>
+                    <div className="bg-white p-5 rounded-2xl border shadow-sm">
+                      <div className="text-slate-500">إجمالي مستحقات الأطباء (رواتب + عمولات)</div>
+                      <div className="text-2xl font-black text-amber-600 mt-1">{totalDoctorComms} ريال</div>
+                    </div>
+                    <div className="bg-white p-5 rounded-2xl border shadow-sm">
+                      <div className="text-slate-500">صافي أرباح المركز التشغيلي</div>
+                      <div className="text-2xl font-black text-emerald-600 mt-1">{totalClinicNetProfit} ريال</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
+                    <h3 className="font-black text-slate-900">إدارة نسب أطباء المركز والرواتب</h3>
+                    <div className="space-y-3">
+                      {doctorStats.map(doc => (
+                        <div key={doc.id} className="p-4 border rounded-xl bg-slate-50 flex justify-between items-center">
+                          <div>
+                            <div className="font-black text-slate-900">{doc.name} ({doc.specialtyName})</div>
+                            <div className="text-slate-500 mt-0.5">الراتب الأساسي: {doc.baseSalary} ريال | نسبة العّمولة: {doc.commissionRate}% | الإيراد المحقق: {doc.gross} ريال</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {editingDocId === doc.id ? (
+                              <div className="flex items-center gap-1">
+                                <input type="number" value={tempRate} onChange={e => setTempRate(e.target.value)} className="w-16 p-1 border rounded text-center" />
+                                <button onClick={() => handleUpdateRate(doc.id)} className="px-2 py-1 bg-emerald-600 text-white rounded">حفظ</button>
+                              </div>
+                            ) : (
+                              <button onClick={() => { setEditingDocId(doc.id); setTempRate(String(doc.commissionRate)); }} className="px-3 py-1 bg-amber-50 text-amber-700 rounded font-bold hover:bg-amber-100">تعديل النسبة</button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
 
               {currentPath === '/appointments' && (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-lg font-black text-slate-900">جدول المواعيد والتقويم التفاعلي</h2>
-                    <button onClick={() => { setSlotDate('2026-08-27'); setSlotTime('18:00'); setShowSlotModal(true); }} className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold">+ حجز موعد</button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
+                  <h3 className="text-sm font-black text-slate-900">جدول المواعيد الشامل</h3>
+                  <div className="space-y-2">
                     {appointments.map(a => (
-                      <div key={a.id} className="p-4 bg-white rounded-2xl border space-y-1 text-xs">
-                        <div className="flex justify-between font-bold text-slate-900"><span>{a.patientName}</span><span className="font-mono">{a.time}</span></div>
-                        <div className="text-emerald-800 font-semibold">{a.serviceName} ({a.price} ر.س)</div>
-                        <div className="text-[11px] text-slate-500">{a.doctorName}</div>
+                      <div key={a.id} className="p-4 border rounded-xl bg-slate-50 flex justify-between items-center">
+                        <div>
+                          <div className="font-black text-slate-900">{a.patientName} - {a.serviceName}</div>
+                          <div className="text-slate-500 mt-0.5">الطبيب: {a.doctorName} | التاريخ: {a.date} ({a.time})</div>
+                        </div>
+                        <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-lg">{a.statusLabel}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {currentPath === '/patients' && (
-                <div className="space-y-4">
-                  <h2 className="text-lg font-black text-slate-900">سجل المرضى والملف الطبي EMR</h2>
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                    <div className="lg:col-span-4 space-y-2">
-                      {patients.map(p => (
-                        <div key={p.id} onClick={() => setSelectedPatient(p)} className={"p-3 rounded-2xl border cursor-pointer text-xs " + (selectedPatient?.id === p.id ? 'bg-emerald-50 border-emerald-500 font-bold' : 'bg-white')}>
-                          <div>{p.name}</div>
-                          <div className="text-[10px] text-slate-500 font-mono" dir="ltr">{p.phone}</div>
+              {currentPath === '/patients' && user.role !== 'patient' && (
+                <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
+                  <h3 className="text-sm font-black text-slate-900">سجل المرضى الشامل (EMR Database)</h3>
+                  <div className="space-y-3">
+                    {patients.map(p => (
+                      <div key={p.id} className="p-4 border rounded-xl bg-slate-50 flex justify-between items-center">
+                        <div>
+                          <div className="font-black text-slate-900">{p.name} (هوية: {p.nationalId})</div>
+                          <div className="text-slate-500 mt-0.5">الهاتف: {p.phone} | الحساسية: {p.allergies} | فصيلة الدم: {p.bloodGroup}</div>
                         </div>
-                      ))}
-                    </div>
-                    <div className="lg:col-span-8 space-y-4">
-                      {selectedPatient && (
-                        <div className="bg-white rounded-3xl border p-6 space-y-4">
-                          <div className="border-b pb-3 flex justify-between items-center">
-                            <div><h3 className="font-bold text-sm text-slate-900">{selectedPatient.name}</h3><span className="text-xs text-slate-500">هوية: {selectedPatient.nationalId} | عمر: {selectedPatient.age}</span></div>
-                            <span className="text-xs bg-rose-50 text-rose-700 px-2 py-1 rounded-lg font-bold">حساسية: {selectedPatient.allergies}</span>
-                          </div>
-                          <div className="bg-slate-900 p-4 rounded-2xl text-white space-y-3">
-                            <span className="text-xs font-bold text-emerald-400">🦷 مخطط الأسنان التفاعلي (32 سن FDI)</span>
-                            <div className="grid grid-cols-8 gap-1 text-center">
-                              {[18,17,16,15,14,13,12,11, 21,22,23,24,25,26,27,28, 48,47,46,45,44,43,42,41, 31,32,33,34,35,36,37,38].map(num => (
-                                <button key={num} onClick={() => setSelectedTooth(num)} className={"h-8 rounded-lg font-mono text-xs font-bold border " + (selectedTooth === num ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-300')}>{num}</button>
-                              ))}
-                            </div>
-                            {selectedTooth && (
-                              <form onSubmit={handleSaveTooth} className="flex gap-2 text-xs pt-2">
-                                <span className="font-bold text-emerald-400">السن #{selectedTooth}:</span>
-                                <select value={toothCond} onChange={e => setToothCond(e.target.value)} className="p-1 bg-slate-800 rounded text-white">
-                                  <option value="composite-filling">حشوة تجميلية</option>
-                                  <option value="root-canal">علاج عصب</option>
-                                  <option value="crown">تاج زيركون</option>
-                                </select>
-                                <input type="text" placeholder="ملاحظات..." value={toothNote} onChange={e => setToothNote(e.target.value)} className="p-1 bg-slate-800 rounded text-white flex-1" />
-                                <button type="submit" className="px-3 bg-emerald-600 text-white rounded font-bold">حفظ</button>
-                              </form>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                        <button onClick={() => { setSelectedPatient(p); setCurrentPath('/dashboard/patient'); }} className="px-3 py-1.5 bg-emerald-600 text-white font-bold rounded-xl">استعراض الملف</button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
               {currentPath === '/prescriptions' && (
-                <div className="space-y-4">
-                  <h2 className="text-lg font-black text-slate-900">الروشتات والوصفات الطبية</h2>
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                    <div className="lg:col-span-5 space-y-2">
-                      {prescriptions.map(r => (
-                        <div key={r.id} onClick={() => setSelectedRx(r)} className={"p-3 rounded-2xl border cursor-pointer text-xs " + (selectedRx?.id === r.id ? 'bg-emerald-50 border-emerald-500 font-bold' : 'bg-white')}>
-                          <div>{r.patientName}</div>
-                          <div className="text-[11px] text-emerald-800">{r.diagnosis}</div>
+                <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
+                  <h3 className="text-sm font-black text-slate-900">أرشيف الروشتات الطبية الإلكترونية</h3>
+                  <div className="space-y-3">
+                    {prescriptions.map(r => (
+                      <div key={r.id} className="p-4 border rounded-xl bg-slate-50 space-y-2">
+                        <div className="flex justify-between font-bold">
+                          <span>{r.patientName} - {r.diagnosis}</span>
+                          <span className="text-emerald-600">{r.id}</span>
                         </div>
-                      ))}
-                    </div>
-                    <div className="lg:col-span-7">
-                      {selectedRx && (
-                        <div className="bg-white p-6 rounded-3xl border space-y-4 text-xs">
-                          <div className="flex justify-between border-b pb-3 font-bold text-sm"><span>{CLINIC_INFO.name}</span><button onClick={() => window.print()} className="px-3 py-1 bg-emerald-600 text-white rounded-xl">طباعة</button></div>
-                          <div><strong>المريض:</strong> {selectedRx.patientName} | <strong>التشخيص:</strong> {selectedRx.diagnosis}</div>
-                          <div className="space-y-2">
-                            <span className="font-serif font-black text-base text-emerald-800">℞ الأدوية الموصوفة:</span>
-                            {selectedRx.items.map((it, i) => (
-                              <div key={i} className="p-2.5 bg-emerald-50 rounded-xl font-semibold">{i+1}. {it.drugName} - {it.dosage} ({it.frequency})</div>
-                            ))}
-                          </div>
+                        <div className="text-slate-500">الطبيب: {r.doctorName} | التاريخ: {r.date}</div>
+                        <div className="pt-2 border-t space-y-1">
+                          {r.items.map((it, idx) => (
+                            <div key={idx} className="flex justify-between bg-white p-2 rounded border">
+                              <span className="font-bold text-slate-800">{it.drugName}</span>
+                              <span className="text-slate-600">{it.dosage} - {it.frequency}</span>
+                            </div>
+                          ))}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
               {currentPath === '/invoices' && (
-                <div className="space-y-4">
-                  <h2 className="text-lg font-black text-slate-900">الفواتير الضريبية 15% ZATCA</h2>
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                    <div className="lg:col-span-5 space-y-2">
-                      {invoices.map(inv => (
-                        <div key={inv.id} onClick={() => setSelectedInv(inv)} className={"p-3 rounded-2xl border cursor-pointer text-xs " + (selectedInv?.id === inv.id ? 'bg-teal-50 border-teal-500 font-bold' : 'bg-white')}>
-                          <div>{inv.patientName}</div>
-                          <div className="text-[10px] text-teal-800 font-mono">{inv.invoiceNumber} • {inv.totalWithVat} ر.س</div>
+                <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
+                  <h3 className="text-sm font-black text-slate-900">الفواتير الضريبية (ZATCA 15%)</h3>
+                  <div className="space-y-3">
+                    {invoices.map(inv => (
+                      <div key={inv.id} className="p-4 border rounded-xl bg-slate-50 flex justify-between items-center">
+                        <div>
+                          <div className="font-black text-slate-900">{inv.invoiceNumber} - {inv.patientName}</div>
+                          <div className="text-slate-500 mt-0.5">المبلغ قبل الضريبة: {inv.subtotal} | الضريبة (15%): {inv.vatAmount} ريال</div>
                         </div>
-                      ))}
-                    </div>
-                    <div className="lg:col-span-7">
-                      {selectedInv && (
-                        <div className="bg-white p-6 rounded-3xl border space-y-4 text-xs">
-                          <div className="flex justify-between border-b pb-3 font-bold text-sm"><span>فاتورة ضريبية مبسطة (15% VAT)</span><button onClick={() => window.print()} className="px-3 py-1 bg-teal-600 text-white rounded-xl">طباعة</button></div>
-                          <div><strong>المريض:</strong> {selectedInv.patientName} | <strong>رقم الفاتورة:</strong> <span className="font-mono">{selectedInv.invoiceNumber}</span></div>
-                          <div className="space-y-1">
-                            {selectedInv.items.map((it, i) => (
-                              <div key={i} className="p-2 bg-slate-50 rounded flex justify-between"><span>{it.description}</span><span className="font-mono font-bold">{it.total} ر.س</span></div>
-                            ))}
-                          </div>
-                          <div className="bg-slate-50 p-3 rounded-xl space-y-1">
-                            <div className="flex justify-between"><span>المجموع:</span><span>{selectedInv.subtotal} ر.س</span></div>
-                            <div className="flex justify-between text-teal-800 font-bold"><span>ضريبة 15%:</span><span>{selectedInv.vatAmount} ر.س</span></div>
-                            <div className="flex justify-between font-black text-sm pt-1 border-t"><span>الإجمالي:</span><span className="text-teal-700">{selectedInv.totalWithVat} ر.س</span></div>
-                          </div>
+                        <div className="text-left font-mono font-bold text-cyan-700">
+                          الإجمالي: {inv.totalWithVat} ريال
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
-              {currentPath === '/whatsapp-notifications' && (
-                <div className="space-y-4">
-                  <h2 className="text-lg font-black text-slate-900">إشعارات وتنبيهات الواتساب</h2>
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                    <div className="lg:col-span-7 bg-white p-5 rounded-3xl border space-y-3 text-xs">
+              {currentPath === '/whatsapp-notifications' && user.role !== 'patient' && (
+                <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
+                  <h3 className="text-sm font-black text-slate-900">نظام إشعارات الواتساب التلقائي (WAHA / API)</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-3">
                       <div>
-                        <label className="block font-bold mb-1">المريض</label>
-                        <select value={waPatientId} onChange={e => setWaPatientId(e.target.value)} className="w-full p-2 border rounded-xl">
-                          {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        <label className="block font-bold mb-1">اختر المريض:</label>
+                        <select value={waPatientId} onChange={e => setWaPatientId(e.target.value)} className="w-full p-2.5 border rounded-xl">
+                          {patients.map(p => <option key={p.id} value={p.id}>{p.name} ({p.phone})</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="block font-bold mb-1">القالب</label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {WHATSAPP_TEMPLATES.map(t => (
-                            <button key={t.id} onClick={() => setWaTplId(t.id)} className={"p-2 rounded-xl border text-right font-bold " + (waTplId === t.id ? 'bg-emerald-50 border-emerald-500' : 'bg-slate-50')}>{t.title}</button>
-                          ))}
-                        </div>
+                        <label className="block font-bold mb-1">قالب الرسالة:</label>
+                        <select value={waTplId} onChange={e => setWaTplId(e.target.value)} className="w-full p-2.5 border rounded-xl">
+                          {WHATSAPP_TEMPLATES.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+                        </select>
                       </div>
                       <div>
-                        <label className="block font-bold mb-1">نص الرسالة</label>
-                        <textarea rows="5" value={waMessage} onChange={e => setWaMessage(e.target.value)} className="w-full p-2.5 bg-slate-50 border rounded-2xl" />
+                        <label className="block font-bold mb-1">رقم الواتساب:</label>
+                        <input type="text" dir="ltr" value={waPhone} onChange={e => setWaPhone(e.target.value)} className="w-full p-2.5 border rounded-xl font-mono" />
                       </div>
-                      <button onClick={() => { let clean = waPhone.replace(/[^0-9]/g, ''); if (clean.startsWith('05')) clean = '966' + clean.substring(1); else if (clean.startsWith('5')) clean = '966' + clean; window.open('https://wa.me/' + clean + '?text=' + encodeURIComponent(waMessage), '_blank'); }} className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-2xl">إرسال عبر واتساب الآن 🚀</button>
                     </div>
-                    <div className="lg:col-span-5 bg-slate-900 p-4 rounded-3xl text-white flex flex-col justify-between">
-                      <div className="text-xs font-bold text-emerald-400 mb-2">معاينة الرسالة</div>
-                      <div className="bg-[#0b141a] p-3 rounded-2xl text-xs"><div className="bg-[#005c4b] p-3 rounded-2xl rounded-tr-none whitespace-pre-wrap">{waMessage}</div></div>
-                      <div className="text-[10px] text-slate-500 text-center mt-2">فتح فوري في واتساب</div>
+                    <div className="space-y-3 flex flex-col">
+                      <label className="block font-bold mb-1">معاينة نص الرسالة الجاهزة للإرسال:</label>
+                      <textarea value={waMessage} onChange={e => setWaMessage(e.target.value)} className="w-full flex-1 p-3 border rounded-xl font-mono text-[11px] bg-slate-50" rows="6"></textarea>
+                      <button onClick={() => alert('تم إرسال الرسالة بنجاح عبر بوابة الواتساب إلى الرقم: ' + waPhone)} className="w-full py-3 bg-emerald-600 text-white font-black rounded-xl shadow">
+                        إرسال الإشعار عبر الواتساب 💬
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -770,38 +777,46 @@
           </div>
 
           {showSlotModal && (
-            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border text-right text-xs space-y-3">
-                <div className="flex justify-between items-center border-b pb-2">
-                  <h3 className="font-bold text-sm text-slate-900">حجز موعد ({slotDate} - {slotTime})</h3>
-                  <button onClick={() => setShowSlotModal(false)} className="text-slate-400 font-bold">✕</button>
+            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 text-xs shadow-2xl">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-sm font-black text-slate-900">حجز موعد جديد في المركز</h3>
+                  <button onClick={() => setShowSlotModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-base">✕</button>
                 </div>
                 <form onSubmit={handleSaveSlot} className="space-y-3">
                   <div>
-                    <label className="block font-bold mb-1">المريض</label>
-                    <select value={slotPatientId} onChange={e => setSlotPatientId(e.target.value)} className="w-full p-2 border rounded-xl">
+                    <label className="block font-bold mb-1">المريض:</label>
+                    <select value={slotPatientId} onChange={e => setSlotPatientId(e.target.value)} className="w-full p-2.5 border rounded-xl font-bold">
                       {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block font-bold mb-1">العيادة والتخصص</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button type="button" onClick={() => { setSlotSpecialty('dental'); setSlotDoctor('د. فهد العنزي'); setSlotService('كشف استشاري وخطة علاج أسنان'); }} className={"p-2 rounded-xl border font-bold " + (slotSpecialty === 'dental' ? 'bg-emerald-600 text-white' : 'bg-slate-50')}>🦷 طب الأسنان</button>
-                      <button type="button" onClick={() => { setSlotSpecialty('dermatology'); setSlotDoctor('د. سلمى الشمري'); setSlotService('كشف استشارية الجلدية وتشخيص البشرة'); }} className={"p-2 rounded-xl border font-bold " + (slotSpecialty === 'dermatology' ? 'bg-teal-600 text-white' : 'bg-slate-50')}>✨ الجلدية والتجميل</button>
+                    <label className="block font-bold mb-1">التخصص والعيادة:</label>
+                    <select value={slotSpecialty} onChange={e => {
+                      const sp = e.target.value;
+                      setSlotSpecialty(sp);
+                      if (sp === 'dental') { setSlotDoctor('د. فهد العنزي'); setSlotService('كشف استشاري وخطة علاج أسنان'); }
+                      else { setSlotDoctor('د. سلمى الشمري'); setSlotService('جلسة كشف وعناية جلدية'); }
+                    }} className="w-full p-2.5 border rounded-xl font-bold">
+                      <option value="dental">طب الأسنان</option>
+                      <option value="dermatology">الجلدية والتجميل</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold mb-1">التاريخ:</label>
+                      <input type="date" value={slotDate} onChange={e => setSlotDate(e.target.value)} className="w-full p-2.5 border rounded-xl font-mono" />
+                    </div>
+                    <div>
+                      <label className="block font-bold mb-1">الوقت:</label>
+                      <select value={slotTime} onChange={e => setSlotTime(e.target.value)} className="w-full p-2.5 border rounded-xl font-mono font-bold">
+                        {timeSlots.map(ts => <option key={ts} value={ts}>{ts}</option>)}
+                      </select>
                     </div>
                   </div>
-                  <div>
-                    <label className="block font-bold mb-1">الطبيب</label>
-                    <input type="text" readOnly value={slotDoctor} className="w-full p-2 bg-slate-100 border rounded-xl font-bold" />
-                  </div>
-                  <div>
-                    <label className="block font-bold mb-1">الخدمة</label>
-                    <input type="text" value={slotService} onChange={e => setSlotService(e.target.value)} className="w-full p-2 border rounded-xl" />
-                  </div>
-                  <div className="flex justify-end gap-2 pt-2">
-                    <button type="button" onClick={() => setShowSlotModal(false)} className="px-3 py-1.5 rounded-xl border font-bold">إلغاء</button>
-                    <button type="submit" className="px-4 py-1.5 rounded-xl bg-emerald-600 text-white font-bold">تأكيد الحجز</button>
-                  </div>
+                  <button type="submit" className="w-full py-3 bg-emerald-600 text-white font-black rounded-xl shadow-lg mt-2">
+                    تأكيد حجز الموعد
+                  </button>
                 </form>
               </div>
             </div>
@@ -810,7 +825,7 @@
       );
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    ReactDOM.render(<App />, document.getElementById('root'));
   </script>
 </body>
 </html>
