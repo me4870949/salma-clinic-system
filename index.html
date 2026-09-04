@@ -3,131 +3,487 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>مركز سلمي لطب الأسنان والجلدية | عرعر - Salma Clinic Portal</title>
+  <title>المنظومة الطبية الذكية للعيادات التخصصية - Smart Clinic SaaS</title>
+  
+  <!-- Google Font: Cairo & Tajawal -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            primary: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857', 900: '#064e3b' },
-            teal: { 50: '#f0fdfa', 100: '#ccfbf1', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e', 900: '#134e4a' }
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7', // Sapphire Medical Blue
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+              950: '#082f49',
+            },
+            medical: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+            }
           },
-          fontFamily: { sans: ['Arial', 'system-ui', '-apple-system', 'sans-serif'] }
+          fontFamily: {
+            sans: ['Cairo', 'Tajawal', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          boxShadow: {
+            'card': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+            'elevated': '0 10px 25px -5px rgba(2, 132, 199, 0.08), 0 8px 10px -6px rgba(2, 132, 199, 0.04)',
+            'glow': '0 0 20px rgba(14, 165, 233, 0.25)',
+          }
         }
       }
     }
   </script>
+
+  <!-- React 18 & Babel Standalone -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
   <style>
-    body { font-family: Arial, system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #0f172a; }
-    @media print { body { background: #fff !important; } .no-print { display: none !important; } }
+    * {
+      font-family: 'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif;
+    }
+    body {
+      font-family: 'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Print styling */
+    @media print {
+      body { background: #ffffff !important; color: #000000 !important; }
+      .no-print, header, aside, .sidebar-container, button:not(.allow-print), .demo-bar, .modal-backdrop {
+        display: none !important;
+      }
+      .print-area {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+      .page-break { page-break-after: always; }
+    }
   </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-slate-50 min-h-screen text-slate-800">
   <div id="root"></div>
+
   <script type="text/babel">
 
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useMemo, useRef } = React;
 
-    const CLINIC_INFO = {
+    // --- 1. ZATCA Phase 1 & 2 Compliant TLV Base64 Generator ---
+    function generateZatcaTlvBase64(sellerName, vatNumber, timeIso, totalAmount, vatAmount) {
+      try {
+        const encodeTag = (tagNum, strVal) => {
+          const utf8 = unescape(encodeURIComponent(strVal || ''));
+          const len = utf8.length;
+          return String.fromCharCode(tagNum) + String.fromCharCode(len) + utf8;
+        };
+
+        const tlvString = 
+          encodeTag(1, sellerName || 'مركز سلمي لطب الأسنان والجلدية') +
+          encodeTag(2, vatNumber || '310489201900003') +
+          encodeTag(3, timeIso || new Date().toISOString()) +
+          encodeTag(4, parseFloat(totalAmount || 0).toFixed(2)) +
+          encodeTag(5, parseFloat(vatAmount || 0).toFixed(2));
+
+        return btoa(tlvString);
+      } catch (err) {
+        console.error('ZATCA TLV error:', err);
+        return btoa('ZATCA|' + sellerName + '|' + vatNumber + '|' + totalAmount);
+      }
+    }
+
+    // --- 2. Default Dynamic White-label SaaS Settings ---
+    const DEFAULT_SETTINGS = {
       name: "مركز سلمي لطب الأسنان والجلدية",
       nameEn: "Salma Dental & Dermatology Center",
       branch: "فرع عرعر - طريق الملك عبدالعزيز",
       phone: "+966 14 662 8899",
-      taxNumber: "310489201900003"
+      taxNumber: "310489201900003",
+      vatRate: 15,
+      currency: "ر.س",
+      theme: "blue", // 'blue', 'emerald', 'indigo', 'teal'
+      wahaUrl: "https://waha.salmaclinic.sa/api/sendText",
+      wahaApiKey: "waha_live_sec_9948271049",
+      enableAutoWhatsApp: true,
+      logoIcon: "Tooth"
     };
 
-    const USERS = [
+    // --- 3. Initial Users & 5 Demo Roles ---
+    const INITIAL_USERS = [
       { id: "u-owner-1", name: "د. عبد الرحمن الشمري", email: "owner@salmaclinic.sa", role: "owner", specialtyName: "مالك المركز والمدير العام", avatar: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=200" },
       { id: "u-doc-1", name: "د. سلمى الشمري", email: "doctor@salmaclinic.sa", role: "doctor", specialty: "dermatology", specialtyName: "استشارية الجلدية والتجميل والليزر", avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200", baseSalary: 18000, commissionRate: 35 },
       { id: "u-doc-2", name: "د. فهد العنزي", email: "dr.fahad@salmaclinic.sa", role: "doctor", specialty: "dental", specialtyName: "أخصائي طب وجراحة الأسنان", avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200", baseSalary: 16000, commissionRate: 30 },
       { id: "u-doc-3", name: "د. ريم الرويلي", email: "dr.reem@salmaclinic.sa", role: "doctor", specialty: "dental", specialtyName: "أخصائية تقويم وتجميل الأسنان", avatar: "https://images.unsplash.com/photo-1594824813627-f40a1b6a18d1?auto=format&fit=crop&q=80&w=200", baseSalary: 15000, commissionRate: 30 },
-      { id: "u-rec-1", name: "أحمد الصلبي", email: "reception@salmaclinic.sa", role: "receptionist", specialtyName: "مسؤول الاستقبال وشؤون المرضى", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200" },
-      { id: "u-fin-1", name: "خالد الدهمشي", email: "finance@salmaclinic.sa", role: "finance", specialtyName: "المدير المالي والمحاسبي", avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=200" }
+      { id: "u-rec-1", name: "أحمد الصلبي", email: "reception@salmaclinic.sa", role: "receptionist", specialtyName: "مسؤول الاستقبال وتنسيق المواعيد", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200" },
+      { id: "u-fin-1", name: "خالد الدهمشي", email: "finance@salmaclinic.sa", role: "finance", specialtyName: "المدير المالي والامتثال الضريبي", avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=200" }
     ];
 
     const DEMO_CREDENTIALS = [
-      { role: "patient", label: "مريض (Patient)", username: "سارة عبد الله الشمري", password: "1092837461", name: "سارة عبد الله الشمري", route: "/dashboard/patient", badge: "بوابة المريض" },
-      { role: "doctor", label: "طبيب (Doctor)", email: "doctor@salmaclinic.sa", password: "doc123", name: "د. سلمى الشمري", route: "/dashboard/doctor", badge: "كشف وتشخيص" },
-      { role: "receptionist", label: "استقبال (Receptionist)", email: "reception@salmaclinic.sa", password: "rec123", name: "أحمد الصلبي", route: "/dashboard/reception", badge: "استقبال وتقويم" },
-      { role: "finance", label: "مدير مالي (Financial Manager)", email: "finance@salmaclinic.sa", password: "fin123", name: "خالد الدهمشي", route: "/dashboard/finance", badge: "15% ZATCA" },
-      { role: "owner", label: "مالك المركز (Owner / Admin)", email: "owner@salmaclinic.sa", password: "owner123", name: "د. عبد الرحمن الشمري", route: "/dashboard/owner", badge: "الأرباح والعمولات" }
+      { role: "patient", label: "مريض (Patient)", username: "سارة عبد الله الشمري", password: "1092837461", name: "سارة عبد الله الشمري", route: "/dashboard/patient", badge: "بوابة المريض", color: "from-blue-600 to-indigo-600" },
+      { role: "doctor", label: "طبيب (Doctor)", email: "doctor@salmaclinic.sa", password: "doc123", name: "د. سلمى الشمري", route: "/dashboard/doctor", badge: "كشف وتشخيص EMR", color: "from-sky-600 to-blue-700" },
+      { role: "receptionist", label: "استقبال (Receptionist)", email: "reception@salmaclinic.sa", password: "rec123", name: "أحمد الصلبي", route: "/dashboard/reception", badge: "حجز وتقويم", color: "from-teal-600 to-emerald-700" },
+      { role: "finance", label: "مدير مالي (Financial)", email: "finance@salmaclinic.sa", password: "fin123", name: "خالد الدهمشي", route: "/dashboard/finance", badge: "15% ZATCA", color: "from-cyan-600 to-blue-800" },
+      { role: "owner", label: "مالك المركز (Owner / Admin)", email: "owner@salmaclinic.sa", password: "owner123", name: "د. عبد الرحمن الشمري", route: "/dashboard/owner", badge: "العمولات والأرباح", color: "from-amber-600 to-orange-700" }
     ];
 
+    // --- 4. FDI Dental Odontogram Conditions Definition ---
+    const TOOTH_CONDITIONS = {
+      'sound': { label: 'سليم (Sound)', color: 'bg-white border-slate-300 text-slate-700', badgeColor: 'bg-slate-100 text-slate-700' },
+      'root-canal': { label: 'علاج عصب (Root Canal)', color: 'bg-rose-500 border-rose-600 text-white', badgeColor: 'bg-rose-100 text-rose-800' },
+      'composite-filling': { label: 'حشوة تجميلية (Composite)', color: 'bg-sky-500 border-sky-600 text-white', badgeColor: 'bg-sky-100 text-sky-800' },
+      'amalgam-filling': { label: 'حشوة أملغم (Amalgam)', color: 'bg-slate-600 border-slate-700 text-white', badgeColor: 'bg-slate-200 text-slate-800' },
+      'crown': { label: 'تاج / زيركون (Crown)', color: 'bg-amber-400 border-amber-500 text-slate-900', badgeColor: 'bg-amber-100 text-amber-800' },
+      'implant': { label: 'زراعة سن (Implant)', color: 'bg-purple-600 border-purple-700 text-white', badgeColor: 'bg-purple-100 text-purple-800' },
+      'extracted': { label: 'مخلوع / مفقود (Extracted)', color: 'bg-rose-950 border-rose-900 text-rose-300 line-through', badgeColor: 'bg-rose-900 text-white' },
+      'caries': { label: 'تسوس نشط (Active Caries)', color: 'bg-orange-500 border-orange-600 text-white', badgeColor: 'bg-orange-100 text-orange-800' }
+    };
+
+    // Adult 32 Teeth Quadrants ISO 3950
+    const QUADRANTS = [
+      { name: "العلوي الأيمن (Q1)", teeth: [18, 17, 16, 15, 14, 13, 12, 11] },
+      { name: "العلوي الأيسر (Q2)", teeth: [21, 22, 23, 24, 25, 26, 27, 28] },
+      { name: "السفلي الأيمن (Q4)", teeth: [48, 47, 46, 45, 44, 43, 42, 41] },
+      { name: "السفلي الأيسر (Q3)", teeth: [31, 32, 33, 34, 35, 36, 37, 38] }
+    ];
+
+    // --- 5. Initial Patients with Dental & Dermatology Records ---
     const INITIAL_PATIENTS = [
-      { id: "PAT-1001", nationalId: "1092837461", name: "سارة عبد الله الشمري", phone: "+966501122334", gender: "female", age: 28, bloodGroup: "O+", allergies: "البنسلين", chronicDiseases: "لا يوجد", specialty: "dermatology", totalVisits: 4, dentalRecords: [], dermatologyRecords: [{ date: "2026-08-25", doctor: "د. سلمى الشمري", treatment: "ليزر كانديلا جنتل برو", parameters: "14 J/cm², 18mm", treatedAreas: ["الوجه", "الذراعين"] }] },
-      { id: "PAT-1002", nationalId: "1083746251", name: "محمد سلطان العنزي", phone: "+966554499881", gender: "male", age: 34, bloodGroup: "A+", allergies: "لا يوجد", chronicDiseases: "ضغط دم خفيف", specialty: "dental", totalVisits: 3, dentalRecords: [{ toothNumber: 16, condition: "root-canal", conditionLabel: "علاج عصب", date: "2026-08-24", doctor: "د. فهد العنزي" }], dermatologyRecords: [] },
-      { id: "PAT-1003", nationalId: "1074839201", name: "نورة فهد المطيري", phone: "+966543322119", gender: "female", age: 31, bloodGroup: "B+", allergies: "السلفا", chronicDiseases: "خمول الغدة", specialty: "dermatology", totalVisits: 6, dentalRecords: [], dermatologyRecords: [{ date: "2026-08-26", doctor: "د. سلمى الشمري", treatment: "حقن بوتوكس أليرجان (46U)", parameters: "الجبهة ومحيط العينين", treatedAreas: ["الوجه"] }] }
+      {
+        id: "PAT-1001",
+        nationalId: "1092837461",
+        name: "سارة عبد الله الشمري",
+        phone: "+966501122334",
+        gender: "female",
+        age: 28,
+        bloodGroup: "O+",
+        allergies: "البنسلين (Penicillin)",
+        chronicDiseases: "لا يوجد",
+        specialty: "dermatology",
+        totalVisits: 4,
+        dentalRecords: [
+          { toothNumber: 16, condition: 'composite-filling', conditionLabel: 'حشوة تجميلية', surface: 'MOD', date: '2026-08-20', doctor: 'د. فهد العنزي', notes: 'حشوة كومبوزيت تجميلية للسطح الإطباقي' },
+          { toothNumber: 21, condition: 'crown', conditionLabel: 'تاج زيركون', surface: 'Full', date: '2026-08-22', doctor: 'د. ريم الرويلي', notes: 'تاج زيركونيا تجميلي للسن الأمامي' }
+        ],
+        dermatologyRecords: [
+          {
+            date: "2026-08-25",
+            doctor: "د. سلمى الشمري",
+            device: "Candela GentleMax Pro (Alexandrite 755nm)",
+            treatment: "ليزر إزالة الشعر - جلسة 4",
+            fluence: "16 J/cm²",
+            pulseWidth: "3 ms",
+            spotSize: "18 mm",
+            dcdCooling: "40/30 ms",
+            treatedAreas: ["الوجه كامل", "الذراعين"],
+            notes: "استجابة ممتازة، لا يوجد احمرار مفرط، تم وصف كريم مرمم"
+          },
+          {
+            date: "2026-07-28",
+            doctor: "د. سلمى الشمري",
+            device: "Profhilo BAP Technique",
+            treatment: "حقن نضارة بروفايلو (2ml)",
+            fluence: "N/A",
+            pulseWidth: "N/A",
+            spotSize: "N/A",
+            dcdCooling: "N/A",
+            treatedAreas: ["نقاط الوجه الخمس (BAP Points)"],
+            notes: "جلسة التعزيز الثانية لنضارة وتحفيز الكولاجين"
+          }
+        ]
+      },
+      {
+        id: "PAT-1002",
+        nationalId: "1083746251",
+        name: "محمد سلطان العنزي",
+        phone: "+966554499881",
+        gender: "male",
+        age: 34,
+        bloodGroup: "A+",
+        allergies: "لا يوجد",
+        chronicDiseases: "ضغط دم خفيف",
+        specialty: "dental",
+        totalVisits: 3,
+        dentalRecords: [
+          { toothNumber: 46, condition: 'root-canal', conditionLabel: 'علاج عصب', surface: 'O', date: '2026-08-24', doctor: 'د. فهد العنزي', notes: 'تنظيف وسحب العصب وحشو القنوات' },
+          { toothNumber: 47, condition: 'crown', conditionLabel: 'تاج زيركون', surface: 'Full', date: '2026-08-27', doctor: 'د. فهد العنزي', notes: 'أخذ المقاسات لتاج زيركون الماني' }
+        ],
+        dermatologyRecords: []
+      },
+      {
+        id: "PAT-1003",
+        nationalId: "1074839201",
+        name: "نورة فهد المطيري",
+        phone: "+966543322119",
+        gender: "female",
+        age: 31,
+        bloodGroup: "B+",
+        allergies: "مشتقات السلفا",
+        chronicDiseases: "خمول الغدة الدرقية",
+        specialty: "dermatology",
+        totalVisits: 6,
+        dentalRecords: [
+          { toothNumber: 11, condition: 'sound', conditionLabel: 'سليم', surface: 'N/A', date: '2026-08-15', doctor: 'د. فهد العنزي', notes: 'فحص دوري وتنظيف جير' }
+        ],
+        dermatologyRecords: [
+          {
+            date: "2026-08-26",
+            doctor: "د. سلمى الشمري",
+            device: "Injectables - Botox Allergan",
+            treatment: "حقن بوتوكس أليرجان (48 وحدة)",
+            fluence: "48 Units",
+            pulseWidth: "N/A",
+            spotSize: "N/A",
+            dcdCooling: "Ice Pack",
+            treatedAreas: ["الجبهة", "بين الحاجبين", "محيط العينين (Crow's Feet)"],
+            notes: "توزيع دقيق للوحدات لتفادي ارتخاء الجفون"
+          }
+        ]
+      }
     ];
 
+    // --- 6. Initial Appointments ---
     const INITIAL_APPOINTMENTS = [
-      { id: "APT-001", patientId: "PAT-1001", patientName: "سارة عبد الله الشمري", phone: "+966501122334", doctorId: "u-doc-1", doctorName: "د. سلمى الشمري", specialty: "dermatology", serviceName: "جلسة رتوش ليزر كانديلا", date: "2026-08-27", time: "18:30", status: "in-progress", statusLabel: "في غرفة الكشف", price: 350 },
-      { id: "APT-002", patientId: "PAT-1002", patientName: "محمد سلطان العنزي", phone: "+966554499881", doctorId: "u-doc-2", doctorName: "د. فهد العنزي", specialty: "dental", serviceName: "تركيب تاج زيركون للسن 16", date: "2026-08-27", time: "19:15", status: "waiting", statusLabel: "في صالة الانتظار", price: 850 },
-      { id: "APT-003", patientId: "PAT-1003", patientName: "نورة فهد المطيري", phone: "+966543322119", doctorId: "u-doc-1", doctorName: "د. سلمى الشمري", specialty: "dermatology", serviceName: "حقن فيلر شفايف Juvederm", date: "2026-08-27", time: "20:00", status: "scheduled", statusLabel: "مؤكد", price: 1200 },
-      { id: "APT-004", patientId: "PAT-1001", patientName: "سارة عبد الله الشمري", phone: "+966501122334", doctorId: "u-doc-1", doctorName: "د. سلمى الشمري", specialty: "dermatology", serviceName: "جلسة نضارة Profhilo", date: "2026-08-29", time: "19:00", status: "scheduled", statusLabel: "مؤكد", price: 950 }
+      { id: "APT-001", patientId: "PAT-1001", patientName: "سارة عبد الله الشمري", phone: "+966501122334", doctorId: "u-doc-1", doctorName: "د. سلمى الشمري", specialty: "dermatology", serviceName: "جلسة رتوش ليزر كانديلا", date: "2026-09-04", time: "18:30", status: "in-progress", statusLabel: "في غرفة الكشف", price: 350 },
+      { id: "APT-002", patientId: "PAT-1002", patientName: "محمد سلطان العنزي", phone: "+966554499881", doctorId: "u-doc-2", doctorName: "د. فهد العنزي", specialty: "dental", serviceName: "تركيب تاج زيركون للسن 46", date: "2026-09-04", time: "19:15", status: "waiting", statusLabel: "في صالة الانتظار", price: 850 },
+      { id: "APT-003", patientId: "PAT-1003", patientName: "نورة فهد المطيري", phone: "+966543322119", doctorId: "u-doc-1", doctorName: "د. سلمى الشمري", specialty: "dermatology", serviceName: "حقن فيلر شفايف Juvederm", date: "2026-09-04", time: "20:00", status: "scheduled", statusLabel: "مؤكد", price: 1200 },
+      { id: "APT-004", patientId: "PAT-1001", patientName: "سارة عبد الله الشمري", phone: "+966501122334", doctorId: "u-doc-1", doctorName: "د. سلمى الشمري", specialty: "dermatology", serviceName: "جلسة نضارة Profhilo", date: "2026-09-06", time: "19:00", status: "scheduled", statusLabel: "مؤكد", price: 950 }
     ];
 
+    // --- 7. Initial Prescriptions ---
     const INITIAL_PRESCRIPTIONS = [
-      { id: "RX-8801", patientId: "PAT-1002", patientName: "محمد سلطان العنزي", doctorName: "د. فهد العنزي", doctorTitle: "أخصائي طب وجراحة الأسنان", date: "2026-08-24", diagnosis: "التهاب ما بعد علاج العصب للسن 16", items: [{ drugName: "Augmentin 1g", dosage: "قرص واحد", frequency: "مرتين يومياً", duration: "5 أيام" }, { drugName: "Cataflam 50mg", dosage: "قرص", frequency: "عند اللزوم", duration: "3 أيام" }] },
-      { id: "RX-8802", patientId: "PAT-1003", patientName: "نورة فهد المطيري", doctorName: "د. سلمى الشمري", doctorTitle: "استشارية الجلدية والتجميل", date: "2026-08-26", diagnosis: "عناية ما بعد حقن البوتوكس والفيلر", items: [{ drugName: "Arnicare Gel", dosage: "دهان موضعي", frequency: "3 مرات يومياً", duration: "4 أيام" }, { drugName: "Avene Cicalfate+", dosage: "كريم مرمم", frequency: "مرتين يومياً", duration: "7 أيام" }] },
-      { id: "RX-8803", patientId: "PAT-1001", patientName: "سارة عبد الله الشمري", doctorName: "د. سلمى الشمري", doctorTitle: "استشارية الجلدية والتجميل", date: "2026-08-25", diagnosis: "واقي شمس ومرطب بعد الليزر", items: [{ drugName: "Fucidin H", dosage: "مرتين يومياً", frequency: "3 أيام", duration: "3 أيام" }] }
+      { id: "RX-8801", patientId: "PAT-1002", patientName: "محمد سلطان العنزي", nationalId: "1083746251", doctorName: "د. فهد العنزي", doctorTitle: "أخصائي طب وجراحة الأسنان (ترخيص 49201)", date: "2026-09-04", diagnosis: "التهاب ما بعد علاج العصب للسن 46", items: [{ drugName: "Augmentin 1g", dosage: "قرص واحد", frequency: "مرتين يومياً بعد الأكل", duration: "5 أيام", instructions: "إكمال الكورس كاملاً" }, { drugName: "Cataflam 50mg", dosage: "قرص", frequency: "عند اللزوم / الألم الشديد", duration: "3 أيام", instructions: "بعد الأكل مع كوب ماء" }, { drugName: "Curasept Mouthwash", dosage: "10 مل", frequency: "مضمضة 3 مرات يومياً", duration: "7 أيام", instructions: "بدون بلع" }] },
+      { id: "RX-8802", patientId: "PAT-1003", patientName: "نورة فهد المطيري", nationalId: "1074839201", doctorName: "د. سلمى الشمري", doctorTitle: "استشارية الجلدية والتجميل (ترخيص 38104)", date: "2026-09-04", diagnosis: "عناية وترميم ما بعد حقن البوتوكس", items: [{ drugName: "Arnicare Gel", dosage: "دهان موضعي", frequency: "3 مرات يومياً", duration: "4 أيام", instructions: "دهان برفق على مواضع الحقن" }, { drugName: "Avene Cicalfate+ Cream", dosage: "كريم مرمم", frequency: "مرتين يومياً", duration: "7 أيام", instructions: "مرطب صباحاً ومساءً" }] }
     ];
 
+    // --- 8. Initial Invoices with Payment Methods & ZATCA TLV ---
     const INITIAL_INVOICES = [
-      { id: "INV-9001", invoiceNumber: "SALMA-2026-0901", patientId: "PAT-1002", patientName: "محمد سلطان العنزي", patientIdNumber: "1083746251", doctorId: "u-doc-2", doctorName: "د. فهد العنزي", specialty: "dental", date: "2026-08-24", items: [{ description: "علاج عصب وسحب جذور السن 16", quantity: 1, unitPrice: 750, discount: 50, total: 700 }], subtotal: 700, vatAmount: 105, totalWithVat: 805, paymentMethodLabel: "مدى (Mada)" },
-      { id: "INV-9002", invoiceNumber: "SALMA-2026-0902", patientId: "PAT-1001", patientName: "سارة عبد الله الشمري", patientIdNumber: "1092837461", doctorId: "u-doc-1", doctorName: "د. سلمى الشمري", specialty: "dermatology", date: "2026-08-25", items: [{ description: "جلسة ليزر كانديلا جنتل برو", quantity: 1, unitPrice: 450, discount: 50, total: 400 }], subtotal: 400, vatAmount: 60, totalWithVat: 460, paymentMethodLabel: "Apple Pay (مدى)" }
+      { 
+        id: "INV-9001", 
+        invoiceNumber: "SALMA-2026-0901", 
+        patientId: "PAT-1002", 
+        patientName: "محمد سلطان العنزي", 
+        patientIdNumber: "1083746251", 
+        doctorId: "u-doc-2", 
+        doctorName: "د. فهد العنزي", 
+        specialty: "dental", 
+        date: "2026-09-04", 
+        time: "19:30",
+        items: [
+          { description: "علاج عصب وسحب جذور السن 46", quantity: 1, unitPrice: 750, discount: 50, total: 700 }
+        ], 
+        subtotal: 700, 
+        vatAmount: 105, 
+        totalWithVat: 805, 
+        paymentMethod: "mada", 
+        paymentMethodLabel: "مدى (Mada)" 
+      },
+      { 
+        id: "INV-9002", 
+        invoiceNumber: "SALMA-2026-0902", 
+        patientId: "PAT-1001", 
+        patientName: "سارة عبد الله الشمري", 
+        patientIdNumber: "1092837461", 
+        doctorId: "u-doc-1", 
+        doctorName: "د. سلمى الشمري", 
+        specialty: "dermatology", 
+        date: "2026-09-04", 
+        time: "18:50",
+        items: [
+          { description: "جلسة رتوش ليزر كانديلا جنتل برو", quantity: 1, unitPrice: 450, discount: 50, total: 400 }
+        ], 
+        subtotal: 400, 
+        vatAmount: 60, 
+        totalWithVat: 460, 
+        paymentMethod: "applepay", 
+        paymentMethodLabel: "Apple Pay (مدى)" 
+      },
+      { 
+        id: "INV-9003", 
+        invoiceNumber: "SALMA-2026-0903", 
+        patientId: "PAT-1003", 
+        patientName: "نورة فهد المطيري", 
+        patientIdNumber: "1074839201", 
+        doctorId: "u-doc-1", 
+        doctorName: "د. سلمى الشمري", 
+        specialty: "dermatology", 
+        date: "2026-09-03", 
+        time: "20:15",
+        items: [
+          { description: "حقن بوتوكس أليرجان للتجاعيد التعبيرية", quantity: 1, unitPrice: 1200, discount: 100, total: 1100 }
+        ], 
+        subtotal: 1100, 
+        vatAmount: 165, 
+        totalWithVat: 1265, 
+        paymentMethod: "cash", 
+        paymentMethodLabel: "نقدي (Cash)" 
+      }
     ];
 
+    // --- 9. Dynamic WhatsApp Templates ---
     const WHATSAPP_TEMPLATES = [
-      { id: "tpl-1", title: "تأكيد حجز موعد جديد", template: "أهلاً بك {patient_name} 🌸\nنؤكد حجز موعدك في *مركز سلمي لطب الأسنان والجلدية في عرعر*.\n📅 التاريخ: {date}\n⏰ الوقت: {time}\n👨‍⚕️ العيادة: {doctor_name}\n📍 الموقع: عرعر - طريق الملك عبدالعزيز\nللتواصل: 0146628899 ✨" },
-      { id: "tpl-2", title: "تذكير بالموعد (24 ساعة)", template: "تذكير بموعدك غداً ⏰\nعزيزي/عزيزتي {patient_name}، نذكرك بموعدك غداً في *مركز سلمي لطب الأسنان والجلدية*:\n⏰ الموعد: {time} - {date}\n🩺 الطبيب: {doctor_name}\nدمتم بصحة وجمال 🌿" },
-      { id: "tpl-3", title: "رابط الوصفة الطبية الإلكترونية", template: "عزيزي/عزيزتي {patient_name} 💊\nصدرت وصفتك الطبية الإلكترونية رقم {rx_id} من قِبل {doctor_name} في *مركز سلمي لطب الأسنان والجلدية*.\n🔗 استعراض الوصفة:\nhttps://salmaclinic.sa/rx/{rx_id}\nألف سلامة عليك 💐" },
-      { id: "tpl-4", title: "رابط الفاتورة الضريبية ZATCA", template: "مرحباً {patient_name} 🧾\nتم إصدار فاتورتك الضريبية الإلكترونية رقم: {invoice_id}\n💵 الإجمالي شامل 15% ضريبة: {total_amount} ريال\n🔗 تحميل الفاتورة:\nhttps://salmaclinic.sa/invoices/{invoice_id}\nشاكرين لزيارتكم مركز سلمي ✨" }
+      { id: "tpl-1", title: "تأكيد حجز موعد جديد", template: "أهلاً بك {patient_name} 🌸\nنؤكد حجز موعدك في *{clinic_name}* ({branch}).\n📅 التاريخ: {date}\n⏰ الوقت: {time}\n👨‍⚕️ العيادة: {doctor_name}\n📍 العنوان: {branch}\n📞 هاتف المركز: {phone}\nنتطلع لخدمتكم بأعلى معايير الرعاية ✨" },
+      { id: "tpl-2", title: "تذكير بالموعد (قبل 24 ساعة)", template: "تذكير بموعدكم غداً ⏰\nعزيزي/عزيزتي {patient_name}، نود تذكيركم بموعدكم القادم في *{clinic_name}*:\n⏰ الموعد: {time} - {date}\n🩺 الطبيب: {doctor_name}\nدمتم بصحة وجمال 🌿" },
+      { id: "tpl-3", title: "رابط الوصفة الطبية الإلكترونية", template: "عزيزي/عزيزتي {patient_name} 💊\nصدرت وصفتكم الطبية الإلكترونية رقم {rx_id} من قِبل {doctor_name} في *{clinic_name}*.\n🔗 للاطلاع على الوصفة والتعليمات:\nhttps://salmaclinic.sa/rx/{rx_id}\nألف سلامة عليكم 💐" },
+      { id: "tpl-4", title: "رابط الفاتورة الضريبية ZATCA", template: "مرحباً {patient_name} 🧾\nتم إصدار فاتورتكم الضريبية الإلكترونية رقم: {invoice_id}\n💵 الإجمالي شامل 15% ضريبة: {total_amount} {currency}\n🔗 لتحميل وطباعة الفاتورة:\nhttps://salmaclinic.sa/invoices/{invoice_id}\nشاكرين لزيارتكم وثقتكم بنا ✨" },
+      { id: "tpl-5", title: "تعليمات ما بعد الإجراء الطبي", template: "عزيزي/عزيزتي {patient_name} 🏥\nنتمنى لكم الشفاء العاجل. نرفق لكم تعليمات العناية المنزلية بعد جلسة {service_name}.\nلأي استفسار طارئ يرجى التواصل على: {phone}\nمركز {clinic_name} يتمنى لكم دوام العافية 🌸" }
     ];
 
     function App() {
-      const [user, setUser] = useState(USERS[1]);
-      const [currentPath, setCurrentPath] = useState('/dashboard/doctor');
-      const [patients, setPatients] = useState(INITIAL_PATIENTS);
-      const [appointments, setAppointments] = useState(INITIAL_APPOINTMENTS);
-      const [prescriptions, setPrescriptions] = useState(INITIAL_PRESCRIPTIONS);
-      const [invoices, setInvoices] = useState(INITIAL_INVOICES);
-      const [doctors, setDoctors] = useState(USERS.filter(u => u.role === 'doctor'));
+      // --- 1. Dynamic White-Label SaaS Settings State ---
+      const [settings, setSettings] = useState(() => {
+        const saved = localStorage.getItem('salma_clinic_settings');
+        return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+      });
 
-      const [patientTab, setPatientTab] = useState('appointments');
+      // --- 2. Authentication State ---
+      const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem('salma_clinic_auth_user');
+        return saved ? JSON.parse(saved) : INITIAL_USERS[1]; // Default Doctor
+      });
+
+      // --- 3. Navigation & Routing ---
+      const [currentPath, setCurrentPath] = useState('/dashboard/doctor');
+
+      // --- 4. Core Clinical & Operational Data States ---
+      const [patients, setPatients] = useState(() => {
+        const saved = localStorage.getItem('salma_patients');
+        return saved ? JSON.parse(saved) : INITIAL_PATIENTS;
+      });
+
+      const [appointments, setAppointments] = useState(() => {
+        const saved = localStorage.getItem('salma_appointments');
+        return saved ? JSON.parse(saved) : INITIAL_APPOINTMENTS;
+      });
+
+      const [prescriptions, setPrescriptions] = useState(() => {
+        const saved = localStorage.getItem('salma_prescriptions');
+        return saved ? JSON.parse(saved) : INITIAL_PRESCRIPTIONS;
+      });
+
+      const [invoices, setInvoices] = useState(() => {
+        const saved = localStorage.getItem('salma_invoices');
+        return saved ? JSON.parse(saved) : INITIAL_INVOICES;
+      });
+
+      const [doctors, setDoctors] = useState(() => {
+        const saved = localStorage.getItem('salma_doctors');
+        return saved ? JSON.parse(saved) : INITIAL_USERS.filter(u => u.role === 'doctor');
+      });
+
+      // --- 5. Selected Items for Detail & Printing ---
       const [selectedPatient, setSelectedPatient] = useState(INITIAL_PATIENTS[0]);
       const [selectedRx, setSelectedRx] = useState(INITIAL_PRESCRIPTIONS[0]);
       const [selectedInv, setSelectedInv] = useState(INITIAL_INVOICES[0]);
+      const [patientTab, setPatientTab] = useState('appointments'); // 'appointments', 'odontogram', 'derma', 'prescriptions', 'invoices'
 
+      // --- 6. Form Inputs & Modals ---
       const [loginTab, setLoginTab] = useState('patient');
       const [inputPatientName, setInputPatientName] = useState('سارة عبد الله الشمري');
       const [inputNationalId, setInputNationalId] = useState('1092837461');
       const [inputEmail, setInputEmail] = useState('doctor@salmaclinic.sa');
       const [inputPassword, setInputPassword] = useState('doc123');
 
-      const [waPatientId, setWaPatientId] = useState(INITIAL_PATIENTS[0].id);
-      const [waTplId, setWaTplId] = useState(WHATSAPP_TEMPLATES[0].id);
-      const [waPhone, setWaPhone] = useState(INITIAL_PATIENTS[0].phone);
-      const [waMessage, setWaMessage] = useState('');
-
+      // Odontogram selection state
       const [selectedTooth, setSelectedTooth] = useState(null);
-      const [toothCond, setToothCond] = useState('composite-filling');
-      const [toothNote, setToothNote] = useState('');
+      const [toothCondition, setToothCondition] = useState('composite-filling');
+      const [toothSurface, setToothSurface] = useState('Occlusal (O)');
+      const [toothNotes, setToothNotes] = useState('');
 
+      // Dermatology Session State
+      const [showDermaModal, setShowDermaModal] = useState(false);
+      const [dermaDevice, setDermaDevice] = useState('Candela GentleMax Pro (Alexandrite 755nm)');
+      const [dermaTreatment, setDermaTreatment] = useState('جلسة ليزر كانديلا جنتل برو');
+      const [dermaFluence, setDermaFluence] = useState('16 J/cm²');
+      const [dermaPulse, setDermaPulse] = useState('3 ms');
+      const [dermaSpot, setDermaSpot] = useState('18 mm');
+      const [dermaAreas, setDermaAreas] = useState('الوجه والرقبة');
+      const [dermaNotes, setDermaNotes] = useState('');
+
+      // Appointment Booking / Click-to-Add State
       const [showSlotModal, setShowSlotModal] = useState(false);
-      const [slotDate, setSlotDate] = useState('2026-08-27');
+      const [slotDate, setSlotDate] = useState('2026-09-04');
       const [slotTime, setSlotTime] = useState('18:00');
       const [slotPatientId, setSlotPatientId] = useState(INITIAL_PATIENTS[0].id);
       const [slotSpecialty, setSlotSpecialty] = useState('dental');
       const [slotDoctor, setSlotDoctor] = useState('د. فهد العنزي');
       const [slotService, setSlotService] = useState('كشف استشاري وخطة علاج أسنان');
+      const [slotPrice, setSlotPrice] = useState(150);
 
+      // Doctor Commission Rate Live Adjuster
       const [editingDocId, setEditingDocId] = useState(null);
       const [tempRate, setTempRate] = useState('30');
 
+      // WhatsApp Simulator & Webhook Hook State
+      const [waPatientId, setWaPatientId] = useState(INITIAL_PATIENTS[0].id);
+      const [waTplId, setWaTplId] = useState(WHATSAPP_TEMPLATES[0].id);
+      const [waPhone, setWaPhone] = useState(INITIAL_PATIENTS[0].phone);
+      const [waMessage, setWaMessage] = useState('');
+      const [waStatusLog, setWaStatusLog] = useState([]);
+
+      // Settings Form Local State
+      const [settingsForm, setSettingsForm] = useState(settings);
+
+      // --- Sync localStorage ---
+      useEffect(() => {
+        localStorage.setItem('salma_clinic_settings', JSON.stringify(settings));
+      }, [settings]);
+
+      useEffect(() => {
+        if (user) localStorage.setItem('salma_clinic_auth_user', JSON.stringify(user));
+        else localStorage.removeItem('salma_clinic_auth_user');
+      }, [user]);
+
+      useEffect(() => {
+        localStorage.setItem('salma_patients', JSON.stringify(patients));
+      }, [patients]);
+
+      useEffect(() => {
+        localStorage.setItem('salma_appointments', JSON.stringify(appointments));
+      }, [appointments]);
+
+      useEffect(() => {
+        localStorage.setItem('salma_prescriptions', JSON.stringify(prescriptions));
+      }, [prescriptions]);
+
+      useEffect(() => {
+        localStorage.setItem('salma_invoices', JSON.stringify(invoices));
+      }, [invoices]);
+
+      useEffect(() => {
+        localStorage.setItem('salma_doctors', JSON.stringify(doctors));
+      }, [doctors]);
+
+      // --- Dynamic WhatsApp Template Interpolation ---
       useEffect(() => {
         const p = patients.find(pt => pt.id === waPatientId) || patients[0];
         const t = WHATSAPP_TEMPLATES.find(tpl => tpl.id === waTplId) || WHATSAPP_TEMPLATES[0];
@@ -136,34 +492,98 @@
         const inv = invoices.find(i => i.patientId === p.id) || invoices[0];
 
         let txt = t.template;
+        txt = txt.replace(/{clinic_name}/g, settings.name);
+        txt = txt.replace(/{branch}/g, settings.branch);
+        txt = txt.replace(/{phone}/g, settings.phone);
+        txt = txt.replace(/{currency}/g, settings.currency);
         txt = txt.replace(/{patient_name}/g, p.name);
         txt = txt.replace(/{doctor_name}/g, appt ? appt.doctorName : 'د. سلمى الشمري');
-        txt = txt.replace(/{date}/g, appt ? appt.date : '2026-08-27');
+        txt = txt.replace(/{date}/g, appt ? appt.date : '2026-09-04');
         txt = txt.replace(/{time}/g, appt ? appt.time : '18:30');
+        txt = txt.replace(/{service_name}/g, appt ? appt.serviceName : 'كشف العيادة');
         txt = txt.replace(/{rx_id}/g, rx ? rx.id : 'RX-8801');
         txt = txt.replace(/{invoice_id}/g, inv ? inv.invoiceNumber : 'SALMA-2026-0901');
         txt = txt.replace(/{total_amount}/g, inv ? String(inv.totalWithVat) : '460');
 
         setWaMessage(txt);
         setWaPhone(p.phone);
-      }, [waPatientId, waTplId, appointments, prescriptions, invoices, patients]);
+      }, [waPatientId, waTplId, appointments, prescriptions, invoices, patients, settings]);
 
+      // --- Theme CSS Palette Helpers ---
+      const themeColors = useMemo(() => {
+        switch (settings.theme) {
+          case 'emerald':
+            return {
+              primary: 'emerald',
+              bgGradient: 'from-emerald-700 via-teal-800 to-slate-900',
+              btnPrimary: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20',
+              btnAccent: 'bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold',
+              badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+              activeNav: 'bg-emerald-600 text-white shadow-md',
+              iconBg: 'bg-emerald-500/10 text-emerald-600'
+            };
+          case 'indigo':
+            return {
+              primary: 'indigo',
+              bgGradient: 'from-indigo-800 via-slate-900 to-blue-950',
+              btnPrimary: 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20',
+              btnAccent: 'bg-sky-400 hover:bg-sky-500 text-slate-950 font-bold',
+              badge: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+              activeNav: 'bg-indigo-600 text-white shadow-md',
+              iconBg: 'bg-indigo-500/10 text-indigo-600'
+            };
+          case 'teal':
+            return {
+              primary: 'teal',
+              bgGradient: 'from-teal-800 via-cyan-900 to-slate-900',
+              btnPrimary: 'bg-teal-600 hover:bg-teal-700 text-white shadow-teal-600/20',
+              btnAccent: 'bg-cyan-400 hover:bg-cyan-500 text-slate-950 font-bold',
+              badge: 'bg-teal-50 text-teal-700 border-teal-200',
+              activeNav: 'bg-teal-600 text-white shadow-md',
+              iconBg: 'bg-teal-500/10 text-teal-600'
+            };
+          case 'blue':
+          default:
+            return {
+              primary: 'brand',
+              bgGradient: 'from-blue-700 via-slate-900 to-sky-950',
+              btnPrimary: 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-600/20',
+              btnAccent: 'bg-sky-400 hover:bg-sky-500 text-slate-950 font-bold',
+              badge: 'bg-blue-50 text-blue-700 border-blue-200',
+              activeNav: 'bg-brand-600 text-white shadow-md',
+              iconBg: 'bg-blue-500/10 text-brand-600'
+            };
+        }
+      }, [settings.theme]);
+
+      // --- Action Handlers ---
       const handlePatientLogin = (e) => {
         e.preventDefault();
-        const found = patients.find(p => (p.name.includes(inputPatientName.trim()) || p.name === inputPatientName.trim()) && p.nationalId === inputNationalId.trim());
+        const found = patients.find(p => 
+          (p.name.trim().toLowerCase() === inputPatientName.trim().toLowerCase() || p.name.includes(inputPatientName.trim())) && 
+          p.nationalId.trim() === inputNationalId.trim()
+        );
         if (found) {
-          const pUser = { id: found.id, name: found.name, role: 'patient', nationalId: found.nationalId, phone: found.phone, avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200", specialtyName: "مريض (" + found.id + ")" };
+          const pUser = { 
+            id: found.id, 
+            name: found.name, 
+            role: 'patient', 
+            nationalId: found.nationalId, 
+            phone: found.phone, 
+            avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200", 
+            specialtyName: "مريض مسجل (" + found.id + ")" 
+          };
           setUser(pUser);
           setSelectedPatient(found);
           setCurrentPath('/dashboard/patient');
         } else {
-          alert('بيانات المريض غير متطابقة. يرجى تجربة سارة عبد الله الشمري / 1092837461');
+          alert('بيانات المريض غير متطابقة. يرجى تجربة سارة عبد الله الشمري / 1092837461 أو استخدام أحد الحسابات التجريبية بالأسفل.');
         }
       };
 
       const handleStaffLogin = (e) => {
         e.preventDefault();
-        const found = USERS.find(u => u.email.toLowerCase() === inputEmail.toLowerCase());
+        const found = INITIAL_USERS.find(u => u.email.toLowerCase() === inputEmail.trim().toLowerCase());
         if (found) {
           setUser(found);
           if (found.role === 'doctor') setCurrentPath('/dashboard/doctor');
@@ -171,21 +591,29 @@
           else if (found.role === 'finance') setCurrentPath('/dashboard/finance');
           else if (found.role === 'owner') setCurrentPath('/dashboard/owner');
         } else {
-          alert('بيانات الدخول غير صحيحة');
+          alert('بيانات الدخول غير صحيحة. يرجى استخدام الحسابات التجريبية الموضحة.');
         }
       };
 
       const handleDemoLogin = (roleKey) => {
         if (roleKey === 'patient') {
-          const p = INITIAL_PATIENTS[0];
-          const pUser = { id: p.id, name: p.name, role: 'patient', nationalId: p.nationalId, phone: p.phone, avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200", specialtyName: "مريض (" + p.id + ")" };
+          const p = patients[0] || INITIAL_PATIENTS[0];
+          const pUser = { 
+            id: p.id, 
+            name: p.name, 
+            role: 'patient', 
+            nationalId: p.nationalId, 
+            phone: p.phone, 
+            avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200", 
+            specialtyName: "مريض مسجل (" + p.id + ")" 
+          };
           setUser(pUser);
           setSelectedPatient(p);
           setCurrentPath('/dashboard/patient');
           return;
         }
 
-        const target = USERS.find(u => u.role === roleKey) || USERS[0];
+        const target = INITIAL_USERS.find(u => u.role === roleKey) || INITIAL_USERS[0];
         setUser(target);
         if (roleKey === 'doctor') setCurrentPath('/dashboard/doctor');
         else if (roleKey === 'receptionist') setCurrentPath('/dashboard/reception');
@@ -193,17 +621,89 @@
         else if (roleKey === 'owner') setCurrentPath('/dashboard/owner');
       };
 
-      const handleCancelAppt = (id) => {
-        if (window.confirm('هل تريد تأكيد إلغاء هذا الموعد؟')) {
-          setAppointments(appointments.map(a => a.id === id ? { ...a, status: 'cancelled', statusLabel: 'ملغي' } : a));
+      // --- White-Label SaaS Settings Handlers ---
+      const handleSaveSettings = (e) => {
+        e.preventDefault();
+        setSettings(settingsForm);
+        alert('تم حفظ إعدادات وهوية المركز بنجاح! تم تطبيق التغييرات فورياً في كافة أرجاء النظام.');
+      };
+
+      const handleResetSettings = () => {
+        if (window.confirm('هل أنت متأكد من استعادة الإعدادات الافتراضية للنظام؟')) {
+          setSettings(DEFAULT_SETTINGS);
+          setSettingsForm(DEFAULT_SETTINGS);
+          localStorage.removeItem('salma_clinic_settings');
+          alert('تمت استعادة الإعدادات الافتراضية.');
         }
       };
 
+      // --- Odontogram FDI 32 Tooth Handler ---
+      const handleSaveToothCondition = (e) => {
+        e.preventDefault();
+        if (!selectedTooth) return;
+        const conditionObj = TOOTH_CONDITIONS[toothCondition] || TOOTH_CONDITIONS['composite-filling'];
+        
+        const newRecord = {
+          toothNumber: selectedTooth,
+          condition: toothCondition,
+          conditionLabel: conditionObj.label.split(' ')[0],
+          surface: toothSurface,
+          date: new Date().toISOString().split('T')[0],
+          doctor: user?.name || 'د. فهد العنزي',
+          notes: toothNotes || 'إجراء علاجي مسجل في مخطط الأسنان'
+        };
+
+        const currentRecords = selectedPatient.dentalRecords || [];
+        const existingIdx = currentRecords.findIndex(r => r.toothNumber === selectedTooth);
+        let updatedRecords;
+        if (existingIdx >= 0) {
+          updatedRecords = [...currentRecords];
+          updatedRecords[existingIdx] = newRecord;
+        } else {
+          updatedRecords = [newRecord, ...currentRecords];
+        }
+
+        const updatedPatient = { ...selectedPatient, dentalRecords: updatedRecords };
+        setSelectedPatient(updatedPatient);
+        setPatients(patients.map(p => p.id === updatedPatient.id ? updatedPatient : p));
+        alert('تم بنجاح تحديث تشخيص السن #' + selectedTooth + ' في ملف المريض ' + selectedPatient.name);
+        setSelectedTooth(null);
+        setToothNotes('');
+      };
+
+      // --- Dermatology Session Logger ---
+      const handleAddDermaSession = (e) => {
+        e.preventDefault();
+        const newSession = {
+          date: new Date().toISOString().split('T')[0],
+          doctor: user?.name || 'د. سلمى الشمري',
+          device: dermaDevice,
+          treatment: dermaTreatment,
+          fluence: dermaFluence,
+          pulseWidth: dermaPulse,
+          spotSize: dermaSpot,
+          treatedAreas: [dermaAreas],
+          notes: dermaNotes || 'جلسة معالجة مع التوصيات'
+        };
+
+        const updatedPatient = {
+          ...selectedPatient,
+          dermatologyRecords: [newSession, ...(selectedPatient.dermatologyRecords || [])]
+        };
+
+        setSelectedPatient(updatedPatient);
+        setPatients(patients.map(p => p.id === updatedPatient.id ? updatedPatient : p));
+        setShowDermaModal(false);
+        setDermaNotes('');
+        alert('تم تسجيل جلسة الليزر والتجميل بنجاح في سجل المريض!');
+      };
+
+      // --- Appointment Handlers ---
       const handleSaveSlot = (e) => {
         e.preventDefault();
         const p = patients.find(pt => pt.id === slotPatientId) || patients[0];
         const newAppt = {
-          id: "APT-2026-" + (appointments.length + 1),
+          id: "APT-2026-" + String(appointments.length + 1).padStart(3, '0'),
           patientId: p.id,
           patientName: p.name,
           phone: p.phone,
@@ -213,235 +713,582 @@
           serviceName: slotService,
           date: slotDate,
           time: slotTime,
-          status: 'waiting',
+          status: 'waiting', // Enters waiting queue immediately
           statusLabel: 'في صالة الانتظار',
-          price: slotSpecialty === 'dental' ? 150 : 200
+          price: Number(slotPrice)
         };
         setAppointments([newAppt, ...appointments]);
         setShowSlotModal(false);
-        alert("تم حجز موعد " + p.name + " بنجاح في خانة (" + slotDate + " - " + slotTime + ")!");
+        alert('تم تسجيل وصول وحجز موعد ' + p.name + ' بنجاح وإدراجه في طابور الانتظار!');
       };
 
-      const handleSaveTooth = (e) => {
-        e.preventDefault();
-        if (!selectedTooth) return;
-        const newRec = { toothNumber: selectedTooth, condition: toothCond, conditionLabel: toothCond === 'root-canal' ? 'علاج عصب' : 'حشوة تجميلية', date: '2026-08-27', doctor: user?.name || 'د. فهد العنزي', notes: toothNote || 'إجراء مسجل' };
-        const updated = { ...selectedPatient, dentalRecords: [newRec, ...(selectedPatient.dentalRecords || []).filter(r => r.toothNumber !== selectedTooth)] };
-        setSelectedPatient(updated);
-        setPatients(patients.map(p => p.id === updated.id ? updated : p));
-        alert('تم حفظ تشخيص السن #' + selectedTooth);
+      const handleCancelAppt = (id) => {
+        if (window.confirm('هل أنت متأكد من رغبتك في إلغاء هذا الموعد؟')) {
+          setAppointments(appointments.map(a => a.id === id ? { ...a, status: 'cancelled', statusLabel: 'ملغي' } : a));
+        }
       };
 
-      const handleUpdateRate = (docId) => {
+      const handleUpdateDoctorCommission = (docId) => {
         setDoctors(doctors.map(d => d.id === docId ? { ...d, commissionRate: Number(tempRate) } : d));
         setEditingDocId(null);
+        alert('تم تحديث نسبة عمولة الطبيب بنجاح.');
       };
 
-      const doctorStats = doctors.map(doc => {
-        const docInvs = invoices.filter(inv => inv.doctorName === doc.name || inv.doctorId === doc.id);
-        const gross = docInvs.reduce((s, i) => s + i.subtotal, 0);
-        const commRate = doc.commissionRate || 30;
-        const commAmt = (gross * commRate) / 100;
-        const base = doc.baseSalary || 15000;
-        const payout = base + commAmt;
-        const clinicNet = gross - commAmt;
-        return { ...doc, gross, commAmt, payout, clinicNet, count: docInvs.length };
-      });
+      // --- WhatsApp Webhook & API Sender ---
+      const handleSendWhatsAppWebhook = async () => {
+        const cleanPhone = waPhone.replace(/[^0-9]/g, '');
+        const formattedPhone = cleanPhone.startsWith('05') ? '966' + cleanPhone.substring(1) : cleanPhone.startsWith('5') ? '966' + cleanPhone : cleanPhone;
 
+        const payload = {
+          chatId: formattedPhone + "@c.us",
+          text: waMessage,
+          session: "default",
+          metadata: {
+            clinic: settings.name,
+            patientId: waPatientId,
+            timestamp: new Date().toISOString()
+          }
+        };
+
+        const newLog = {
+          id: 'WA-' + Date.now(),
+          time: new Date().toLocaleTimeString('ar-SA'),
+          phone: formattedPhone,
+          status: 'sent',
+          payload
+        };
+
+        setWaStatusLog([newLog, ...waStatusLog]);
+
+        // Trigger native WhatsApp link
+        const waUrl = "https://wa.me/" + formattedPhone + "?text=" + encodeURIComponent(waMessage);
+        window.open(waUrl, '_blank');
+      };
+
+      // --- Financial & Analytics Calculations ---
       const totalClinicGross = invoices.reduce((s, i) => s + i.subtotal, 0);
       const totalClinicVat = invoices.reduce((s, i) => s + i.vatAmount, 0);
       const totalClinicWithVat = invoices.reduce((s, i) => s + i.totalWithVat, 0);
-      const totalDoctorComms = doctorStats.reduce((s, d) => s + d.commAmt, 0);
-      const totalClinicNetProfit = totalClinicGross - totalDoctorComms;
 
-      const timeSlots = ['09:00', '10:00', '11:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+      const paymentBreakdown = useMemo(() => {
+        const mada = invoices.filter(i => i.paymentMethod === 'mada').reduce((s, i) => s + i.totalWithVat, 0);
+        const apple = invoices.filter(i => i.paymentMethod === 'applepay').reduce((s, i) => s + i.totalWithVat, 0);
+        const cash = invoices.filter(i => i.paymentMethod === 'cash').reduce((s, i) => s + i.totalWithVat, 0);
+        const total = totalClinicWithVat || 1;
+        return {
+          mada: { amount: mada, pct: Math.round((mada / total) * 100) },
+          apple: { amount: apple, pct: Math.round((apple / total) * 100) },
+          cash: { amount: cash, pct: Math.round((cash / total) * 100) }
+        };
+      }, [invoices, totalClinicWithVat]);
+
+      const doctorStats = useMemo(() => {
+        return doctors.map(doc => {
+          const docInvs = invoices.filter(inv => inv.doctorName === doc.name || inv.doctorId === doc.id);
+          const gross = docInvs.reduce((s, i) => s + i.subtotal, 0);
+          const commRate = doc.commissionRate || 30;
+          const commAmt = parseFloat(((gross * commRate) / 100).toFixed(2));
+          const base = doc.baseSalary || 15000;
+          const payout = parseFloat((base + commAmt).toFixed(2));
+          const clinicNet = parseFloat((gross - commAmt).toFixed(2));
+          return { ...doc, gross, commAmt, payout, clinicNet, count: docInvs.length };
+        });
+      }, [doctors, invoices]);
+
+      const totalDoctorComms = doctorStats.reduce((s, d) => s + d.commAmt, 0);
+      const totalClinicNetProfit = Math.max(0, totalClinicGross - totalDoctorComms);
+
+      // Time slots & days for interactive calendar
+      const timeSlots = ['09:00', '10:00', '11:00', '12:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'];
       const weekDays = [
-        { label: 'السبت', date: '2026-08-27' },
-        { label: 'الأحد', date: '2026-08-28' },
-        { label: 'الاثنين', date: '2026-08-29' },
-        { label: 'الثلاثاء', date: '2026-08-30' },
-        { label: 'الأربعاء', date: '2026-08-31' }
+        { label: 'السبت', date: '2026-09-04' },
+        { label: 'الأحد', date: '2026-09-05' },
+        { label: 'الاثنين', date: '2026-09-06' },
+        { label: 'الثلاثاء', date: '2026-09-07' },
+        { label: 'الأربعاء', date: '2026-09-08' }
       ];
 
+      // --- VIEW: Unauthenticated / Login Screen ---
       if (currentPath === '/login' || !user) {
         return (
-          <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-10 px-4 text-right" dir="rtl">
-            <div className="max-w-xl mx-auto w-full text-center">
-              <div className="inline-flex p-3.5 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-3xl text-white text-3xl mb-3 shadow-xl">🩺</div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white">{CLINIC_INFO.name}</h1>
-              <p className="text-emerald-400 text-xs sm:text-sm font-semibold mt-1">{CLINIC_INFO.nameEn} • {CLINIC_INFO.branch}</p>
+          <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex flex-col justify-center py-10 px-4 text-right relative overflow-hidden" dir="rtl">
+            <div className="absolute -top-32 -right-32 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-sky-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div className="max-w-xl mx-auto w-full text-center relative z-10">
+              <div className="inline-flex p-4 bg-gradient-to-tr from-brand-600 to-sky-400 rounded-3xl text-white text-3xl mb-4 shadow-xl shadow-brand-500/20 ring-4 ring-white/10">
+                🦷
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                {settings.name}
+              </h1>
+              <p className="text-sky-300 text-xs sm:text-sm font-semibold mt-1">
+                {settings.nameEn} • {settings.branch}
+              </p>
+              <p className="text-slate-400 text-xs mt-1">
+                بوابة المرضى والإدارة الطبية الذكية الموحدة (SaaS Multi-Role Portal)
+              </p>
             </div>
 
-            <div className="mt-6 max-w-xl mx-auto w-full bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-2xl">
-              <div className="flex bg-slate-800 p-1.5 rounded-2xl mb-6">
-                <button type="button" onClick={() => setLoginTab('patient')} className={"flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition " + (loginTab === 'patient' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow' : 'text-slate-400')}>
-                  👤 دخول المرضى (الاسم + الهوية)
+            <div className="mt-6 max-w-xl mx-auto w-full bg-slate-800/90 backdrop-blur-xl border border-slate-700/80 p-6 sm:p-8 rounded-3xl shadow-2xl relative z-10">
+              
+              {/* Tab Selector */}
+              <div className="flex bg-slate-900/90 p-1.5 rounded-2xl border border-slate-700/80 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setLoginTab('patient')}
+                  className={"flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 " + (loginTab === 'patient' ? 'bg-gradient-to-r from-brand-600 to-sky-600 text-white shadow-lg' : 'text-slate-400 hover:text-white')}
+                >
+                  <span>👤 بوابة المرضى (الاسم + الهوية)</span>
                 </button>
-                <button type="button" onClick={() => setLoginTab('staff')} className={"flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition " + (loginTab === 'staff' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow' : 'text-slate-400')}>
-                  🔑 دخول الكادر الطبي والإداري
+                <button
+                  type="button"
+                  onClick={() => setLoginTab('staff')}
+                  className={"flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 " + (loginTab === 'staff' ? 'bg-gradient-to-r from-brand-600 to-sky-600 text-white shadow-lg' : 'text-slate-400 hover:text-white')}
+                >
+                  <span>🔑 دخول الكادر الطبي والإداري</span>
                 </button>
               </div>
 
               {loginTab === 'patient' ? (
                 <form onSubmit={handlePatientLogin} className="space-y-4 text-xs">
                   <div>
-                    <label className="block text-slate-300 font-bold mb-1">اسم المريض المسجل (Username)</label>
-                    <input type="text" value={inputPatientName} onChange={e => setInputPatientName(e.target.value)} placeholder="سارة عبد الله الشمري" className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs font-bold" />
+                    <label className="block text-slate-300 font-bold mb-1.5">اسم المريض المسجل (Patient Name)</label>
+                    <input
+                      type="text"
+                      value={inputPatientName}
+                      onChange={e => setInputPatientName(e.target.value)}
+                      placeholder="مثال: سارة عبد الله الشمري"
+                      className="w-full p-3 bg-slate-900/80 border border-slate-700 rounded-xl text-white text-xs sm:text-sm font-bold placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    />
                   </div>
                   <div>
-                    <label className="block text-slate-300 font-bold mb-1">رقم الهوية الوطنية / الإقامة (Password)</label>
-                    <input type="password" dir="ltr" value={inputNationalId} onChange={e => setInputNationalId(e.target.value)} placeholder="1092837461" className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs font-mono font-bold" />
+                    <label className="block text-slate-300 font-bold mb-1.5">رقم الهوية الوطنية / الإقامة (National ID as Password)</label>
+                    <input
+                      type="password"
+                      dir="ltr"
+                      value={inputNationalId}
+                      onChange={e => setInputNationalId(e.target.value)}
+                      placeholder="10XXXXXXXX"
+                      className="w-full p-3 bg-slate-900/80 border border-slate-700 rounded-xl text-white text-xs sm:text-sm font-mono font-bold placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">💡 استخدم اسمك المسجل ورقم الهوية المكون من 10 أرقام للدخول الفوري.</p>
                   </div>
-                  <button type="submit" className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black rounded-xl text-xs sm:text-sm shadow-lg">
-                    دخول إلى بوابة المريض
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 bg-gradient-to-r from-brand-600 to-sky-500 hover:from-brand-500 hover:to-sky-400 text-white font-black rounded-xl text-xs sm:text-sm shadow-lg shadow-brand-600/30 transition duration-150"
+                  >
+                    دخول إلى بوابة المريض الإلكترونية 🌸
                   </button>
                 </form>
               ) : (
                 <form onSubmit={handleStaffLogin} className="space-y-4 text-xs">
                   <div>
-                    <label className="block text-slate-300 font-bold mb-1">البريد الإلكتروني المهني</label>
-                    <input type="email" dir="ltr" value={inputEmail} onChange={e => setInputEmail(e.target.value)} className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs font-mono" />
+                    <label className="block text-slate-300 font-bold mb-1.5">البريد الإلكتروني المهني (Staff Email)</label>
+                    <input
+                      type="email"
+                      dir="ltr"
+                      value={inputEmail}
+                      onChange={e => setInputEmail(e.target.value)}
+                      placeholder="doctor@salmaclinic.sa / owner@salmaclinic.sa"
+                      className="w-full p-3 bg-slate-900/80 border border-slate-700 rounded-xl text-white text-xs sm:text-sm font-mono placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    />
                   </div>
                   <div>
-                    <label className="block text-slate-300 font-bold mb-1">كلمة المرور</label>
-                    <input type="password" dir="ltr" value={inputPassword} onChange={e => setInputPassword(e.target.value)} className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs font-mono" />
+                    <label className="block text-slate-300 font-bold mb-1.5">كلمة المرور (Password)</label>
+                    <input
+                      type="password"
+                      dir="ltr"
+                      value={inputPassword}
+                      onChange={e => setInputPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full p-3 bg-slate-900/80 border border-slate-700 rounded-xl text-white text-xs sm:text-sm font-mono placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    />
                   </div>
-                  <button type="submit" className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black rounded-xl text-xs sm:text-sm shadow-lg">
-                    دخول الكادر إلى المنظومة
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 bg-gradient-to-r from-brand-600 to-sky-500 hover:from-brand-500 hover:to-sky-400 text-white font-black rounded-xl text-xs sm:text-sm shadow-lg shadow-brand-600/30 transition duration-150"
+                  >
+                    تسجيل دخول الكادر إلى المنظومة 🚀
                   </button>
                 </form>
               )}
 
-              <div className="mt-8 pt-6 border-t border-slate-800">
-                <div className="text-xs font-bold text-slate-400 mb-3">حسابات تجريبية فورية بنقرة واحدة (5 أدوار):</div>
+              {/* 5 One-Click Demo Credentials */}
+              <div className="mt-8 pt-6 border-t border-slate-700/60">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-slate-300">حسابات تجريبية جاهزة بنقرة واحدة (5 Demo Roles):</span>
+                  <span className="text-[10px] bg-brand-500/20 text-sky-300 px-2.5 py-0.5 rounded-full font-bold">جاهز للاختبار</span>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {DEMO_CREDENTIALS.map(d => (
-                    <button key={d.role} onClick={() => handleDemoLogin(d.role)} className="p-3 rounded-xl bg-slate-800 hover:bg-emerald-950/50 border border-slate-700 text-right transition">
-                      <div className="text-xs font-black text-white">{d.label}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">{d.name}</div>
-                      <div className="text-[9px] font-mono text-emerald-400 mt-1" dir="ltr">{d.route}</div>
+                    <button
+                      key={d.role}
+                      type="button"
+                      onClick={() => handleDemoLogin(d.role)}
+                      className="p-3 rounded-2xl bg-slate-900/90 hover:bg-brand-950/60 border border-slate-700/80 hover:border-brand-500 text-right transition group"
+                    >
+                      <div className="text-xs font-black text-white group-hover:text-sky-300 transition">{d.label}</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">{d.name}</div>
+                      <div className="text-[9px] font-mono text-sky-400 mt-1" dir="ltr">{d.route}</div>
                     </button>
                   ))}
                 </div>
               </div>
+
             </div>
           </div>
         );
       }
 
+      // --- MAIN AUTHENTICATED APP LAYOUT ---
       return (
-        <div className="min-h-screen flex flex-col bg-slate-50 font-sans" dir="rtl">
-          <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-              <div className="flex items-center gap-3 cursor-pointer" onClick={() => {
-                if (user.role === 'patient') setCurrentPath('/dashboard/patient');
-                else if (user.role === 'doctor') setCurrentPath('/dashboard/doctor');
-                else if (user.role === 'receptionist') setCurrentPath('/dashboard/reception');
-                else if (user.role === 'finance') setCurrentPath('/dashboard/finance');
-                else if (user.role === 'owner') setCurrentPath('/dashboard/owner');
-              }}>
-                <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black">🦷</div>
+        <div className="min-h-screen flex flex-col bg-[#f8fafc] font-sans antialiased text-slate-800" dir="rtl">
+          
+          {/* Top Sticky Header */}
+          <header className="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-sm shadow-slate-100">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+              
+              {/* Brand Logo & Name */}
+              <div
+                className="flex items-center gap-3 cursor-pointer group"
+                onClick={() => {
+                  if (user.role === 'patient') setCurrentPath('/dashboard/patient');
+                  else if (user.role === 'doctor') setCurrentPath('/dashboard/doctor');
+                  else if (user.role === 'receptionist') setCurrentPath('/dashboard/reception');
+                  else if (user.role === 'finance') setCurrentPath('/dashboard/finance');
+                  else if (user.role === 'owner') setCurrentPath('/dashboard/owner');
+                }}
+              >
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-sky-500 text-white flex items-center justify-center text-xl font-black shadow-md shadow-brand-500/20 group-hover:scale-105 transition">
+                  🦷
+                </div>
                 <div>
-                  <h1 className="text-xs sm:text-sm font-black text-slate-900">{CLINIC_INFO.name}</h1>
-                  <p className="text-[10px] text-slate-500">{CLINIC_INFO.branch}</p>
+                  <h1 className="text-sm sm:text-base font-black text-slate-900 leading-tight group-hover:text-brand-600 transition">
+                    {settings.name}
+                  </h1>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    {settings.branch}
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className="hidden lg:flex bg-slate-100 p-1 rounded-xl">
+              {/* Top Navigation Switchers & User Profile */}
+              <div className="flex items-center gap-2 sm:gap-4">
+                
+                {/* 5 Demo Roles Quick Pills */}
+                <div className="hidden xl:flex bg-slate-100 p-1 rounded-2xl border border-slate-200/60">
                   {DEMO_CREDENTIALS.map(d => (
-                    <button key={d.role} onClick={() => handleDemoLogin(d.role)} className={"px-2.5 py-1 rounded-lg text-xs font-bold transition " + (user.role === d.role ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500')}>
-                      {d.role === 'patient' ? 'مريض' : d.role === 'doctor' ? 'طبيب' : d.role === 'receptionist' ? 'استقبال' : d.role === 'finance' ? 'مالية' : 'مالك'}
+                    <button
+                      key={d.role}
+                      type="button"
+                      onClick={() => handleDemoLogin(d.role)}
+                      className={"px-2.5 py-1 rounded-xl text-xs font-bold transition " + (user.role === d.role ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-900')}
+                    >
+                      {d.role === 'patient' ? 'مريض' : d.role === 'doctor' ? 'طبيب' : d.role === 'receptionist' ? 'استقبال' : d.role === 'finance' ? 'مالية' : 'مالك المركز'}
                     </button>
                   ))}
                 </div>
 
-                <div className="flex items-center gap-2 pr-2 border-r border-slate-200">
-                  <div className="hidden sm:block text-left text-xs font-bold text-slate-900">
-                    {user.name}
+                {/* Settings Shortcut Button (Owner only) */}
+                {user.role === 'owner' && (
+                  <button
+                    onClick={() => setCurrentPath('/settings')}
+                    className={"p-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border " + (currentPath === '/settings' ? 'bg-brand-50 text-brand-700 border-brand-300' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100')}
+                    title="إعدادات وهوية المركز"
+                  >
+                    <span>⚙️</span>
+                    <span className="hidden sm:inline">إعدادات وهوية المركز</span>
+                  </button>
+                )}
+
+                {/* Logged in User Tag & Logout */}
+                <div className="flex items-center gap-2.5 pr-2 border-r border-slate-200">
+                  <div className="hidden md:block text-left text-xs font-bold text-slate-900">
+                    <div>{user.name}</div>
                     <div className="text-[10px] text-slate-500">{user.specialtyName}</div>
                   </div>
-                  <button onClick={() => { setUser(null); setCurrentPath('/login'); }} className="text-xs text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl font-bold transition">
+                  
+                  <img
+                    src={user.avatar || "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200"}
+                    alt={user.name}
+                    className="w-9 h-9 rounded-xl object-cover ring-2 ring-slate-200"
+                  />
+
+                  <button
+                    onClick={() => { setUser(null); setCurrentPath('/login'); }}
+                    className="p-2 text-xs text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl font-bold transition"
+                    title="تسجيل الخروج"
+                  >
                     خروج
                   </button>
                 </div>
+
               </div>
+
             </div>
           </header>
 
+          {/* Main Content Layout with Sidebar */}
           <div className="flex-1 max-w-7xl w-full mx-auto flex">
-            <aside className="w-56 bg-slate-900 text-slate-300 p-4 shrink-0 hidden md:flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="text-[10px] font-bold text-slate-500 uppercase px-2">لوحات التحكم</div>
-                <div className="space-y-1">
-                  {user.role === 'patient' && <button onClick={() => setCurrentPath('/dashboard/patient')} className={"w-full text-right p-2.5 rounded-xl text-xs font-bold " + (currentPath === '/dashboard/patient' ? 'bg-purple-600 text-white' : 'hover:bg-slate-800')}>👤 بوابة المريض</button>}
-                  {user.role === 'doctor' && <button onClick={() => setCurrentPath('/dashboard/doctor')} className={"w-full text-right p-2.5 rounded-xl text-xs font-bold " + (currentPath === '/dashboard/doctor' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800')}>🩺 كشف الطبيب</button>}
-                  {['receptionist', 'doctor', 'finance', 'owner'].includes(user.role) && <button onClick={() => setCurrentPath('/dashboard/reception')} className={"w-full text-right p-2.5 rounded-xl text-xs font-bold " + (currentPath === '/dashboard/reception' ? 'bg-teal-600 text-white' : 'hover:bg-slate-800')}>📅 مكتب الاستقبال</button>}
-                  {['finance', 'owner'].includes(user.role) && <button onClick={() => setCurrentPath('/dashboard/finance')} className={"w-full text-right p-2.5 rounded-xl text-xs font-bold " + (currentPath === '/dashboard/finance' ? 'bg-cyan-600 text-white' : 'hover:bg-slate-800')}>💼 الإدارة والمالية</button>}
-                  {user.role === 'owner' && <button onClick={() => setCurrentPath('/dashboard/owner')} className={"w-full text-right p-2.5 rounded-xl text-xs font-bold " + (currentPath === '/dashboard/owner' ? 'bg-amber-600 text-white' : 'hover:bg-slate-800')}>👑 مالك المركز والعمولات</button>}
+            
+            {/* Sidebar Navigation */}
+            <aside className="w-60 bg-white border-l border-slate-200/80 p-4 shrink-0 hidden lg:flex flex-col justify-between sidebar-container shadow-sm">
+              <div className="space-y-6">
+                
+                {/* Clinic Badge */}
+                <div className="p-3 bg-brand-50/60 rounded-2xl border border-brand-100 text-xs">
+                  <div className="text-brand-900 font-extrabold flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+                    <span>{settings.nameEn}</span>
+                  </div>
+                  <div className="text-[10px] text-brand-700 mt-0.5">ضريبة 15% ZATCA متوافقة</div>
                 </div>
 
-                <div className="text-[10px] font-bold text-slate-500 uppercase px-2 pt-2">الخدمات والعمليات</div>
+                {/* Dashboards Section */}
                 <div className="space-y-1">
-                  <button onClick={() => setCurrentPath('/appointments')} className={"w-full text-right p-2 rounded-xl text-xs font-bold " + (currentPath === '/appointments' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800')}>🗓 جدول المواعيد</button>
-                  {user.role !== 'patient' && <button onClick={() => setCurrentPath('/patients')} className={"w-full text-right p-2 rounded-xl text-xs font-bold " + (currentPath === '/patients' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800')}>👥 سجل المرضى EMR</button>}
-                  <button onClick={() => setCurrentPath('/prescriptions')} className={"w-full text-right p-2 rounded-xl text-xs font-bold " + (currentPath === '/prescriptions' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800')}>📄 الروشتات الطبية</button>
-                  <button onClick={() => setCurrentPath('/invoices')} className={"w-full text-right p-2 rounded-xl text-xs font-bold " + (currentPath === '/invoices' ? 'bg-teal-600 text-white' : 'hover:bg-slate-800')}>🧾 فواتير 15% ZATCA</button>
-                  {user.role !== 'patient' && <button onClick={() => setCurrentPath('/whatsapp-notifications')} className={"w-full text-right p-2 rounded-xl text-xs font-bold " + (currentPath === '/whatsapp-notifications' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800')}>💬 إشعارات الواتساب</button>}
+                  <div className="px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">لوحات التحكم</div>
+                  
+                  {user.role === 'patient' && (
+                    <button
+                      onClick={() => setCurrentPath('/dashboard/patient')}
+                      className={"w-full text-right px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 " + (currentPath === '/dashboard/patient' ? 'bg-brand-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100')}
+                    >
+                      <span>👤</span>
+                      <span>بوابة المريض وسجلي</span>
+                    </button>
+                  )}
+
+                  {user.role === 'doctor' && (
+                    <button
+                      onClick={() => setCurrentPath('/dashboard/doctor')}
+                      className={"w-full text-right px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 " + (currentPath === '/dashboard/doctor' ? 'bg-brand-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100')}
+                    >
+                      <span>🩺</span>
+                      <span>كشف الطبيب ومخطط الأسنان</span>
+                    </button>
+                  )}
+
+                  {['receptionist', 'doctor', 'finance', 'owner'].includes(user.role) && (
+                    <button
+                      onClick={() => setCurrentPath('/dashboard/reception')}
+                      className={"w-full text-right px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 " + (currentPath === '/dashboard/reception' ? 'bg-brand-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100')}
+                    >
+                      <span>📅</span>
+                      <span>كاونتر الاستقبال والانتظار</span>
+                    </button>
+                  )}
+
+                  {['finance', 'owner'].includes(user.role) && (
+                    <button
+                      onClick={() => setCurrentPath('/dashboard/finance')}
+                      className={"w-full text-right px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 " + (currentPath === '/dashboard/finance' ? 'bg-brand-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100')}
+                    >
+                      <span>💼</span>
+                      <span>التقارير المالية والضريبة</span>
+                    </button>
+                  )}
+
+                  {user.role === 'owner' && (
+                    <button
+                      onClick={() => setCurrentPath('/dashboard/owner')}
+                      className={"w-full text-right px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 " + (currentPath === '/dashboard/owner' ? 'bg-brand-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100')}
+                    >
+                      <span>👑</span>
+                      <span>مالك المركز وعمولات الأطباء</span>
+                    </button>
+                  )}
                 </div>
+
+                {/* Operations Section */}
+                <div className="space-y-1">
+                  <div className="px-2 text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">الخدمات الطبية والتقويم</div>
+                  
+                  <button
+                    onClick={() => setCurrentPath('/appointments')}
+                    className={"w-full text-right px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 " + (currentPath === '/appointments' ? 'bg-brand-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100')}
+                  >
+                    <span>🗓</span>
+                    <span>التقويم التفاعلي (Click-to-Add)</span>
+                  </button>
+
+                  {user.role !== 'patient' && (
+                    <button
+                      onClick={() => setCurrentPath('/patients')}
+                      className={"w-full text-right px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 " + (currentPath === '/patients' ? 'bg-brand-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100')}
+                    >
+                      <span>👥</span>
+                      <span>سجل المرضى ومخطط الأسنان</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => setCurrentPath('/prescriptions')}
+                    className={"w-full text-right px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 " + (currentPath === '/prescriptions' ? 'bg-brand-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100')}
+                  >
+                    <span>📄</span>
+                    <span>الروشتات والوصفات الطبية</span>
+                  </button>
+
+                  <button
+                    onClick={() => setCurrentPath('/invoices')}
+                    className={"w-full text-right px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 " + (currentPath === '/invoices' ? 'bg-brand-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100')}
+                  >
+                    <span>🧾</span>
+                    <span>الفواتير 15% ZATCA QR</span>
+                  </button>
+
+                  {user.role !== 'patient' && (
+                    <button
+                      onClick={() => setCurrentPath('/whatsapp-notifications')}
+                      className={"w-full text-right px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 " + (currentPath === '/whatsapp-notifications' ? 'bg-brand-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100')}
+                    >
+                      <span>💬</span>
+                      <span>إشعارات الواتساب التلقائية</span>
+                    </button>
+                  )}
+
+                  {user.role === 'owner' && (
+                    <button
+                      onClick={() => setCurrentPath('/settings')}
+                      className={"w-full text-right px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 " + (currentPath === '/settings' ? 'bg-brand-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100')}
+                    >
+                      <span>⚙️</span>
+                      <span>إعدادات وهوية المركز (SaaS)</span>
+                    </button>
+                  )}
+                </div>
+
               </div>
-              <div className="text-[10px] text-slate-500 font-bold">مركز سلمي • عرعر</div>
+
+              {/* Sidebar Footer */}
+              <div className="pt-4 border-t border-slate-100 text-right">
+                <div className="text-[11px] font-bold text-slate-700">{settings.name}</div>
+                <div className="text-[10px] text-slate-400 font-mono" dir="ltr">{settings.phone}</div>
+              </div>
             </aside>
 
+            {/* Main Dynamic Viewport Container */}
             <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-y-auto">
+
+              {/* 1. PATIENT DASHBOARD */}
               {currentPath === '/dashboard/patient' && (
                 <div className="space-y-6">
-                  <div className="bg-gradient-to-l from-purple-900 via-slate-900 to-emerald-950 rounded-3xl p-6 text-white shadow-xl flex justify-between items-center">
-                    <div>
-                      <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-bold text-purple-200">بوابة المريض</span>
-                      <h2 className="text-2xl font-black mt-2">أهلاً بك، {selectedPatient.name} 🌸</h2>
-                      <div className="text-xs text-purple-200 mt-1">الهوية: {selectedPatient.nationalId} | فصيلة الدم: {selectedPatient.bloodGroup}</div>
+                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4"}>
+                    <div className="space-y-2">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-bold backdrop-blur-md">
+                        <span>🌸</span>
+                        <span>بوابة المريض الإلكترونية الموحدة</span>
+                      </span>
+                      <h2 className="text-2xl sm:text-3xl font-black">مرحباً بك، {selectedPatient.name} 👋</h2>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-sky-200">
+                        <span>رقم الملف: <strong className="font-mono text-white">{selectedPatient.id}</strong></span>
+                        <span>•</span>
+                        <span>الهوية: <strong className="font-mono text-white">{selectedPatient.nationalId}</strong></span>
+                        <span>•</span>
+                        <span>فصيلة الدم: <strong className="text-rose-300 font-bold">{selectedPatient.bloodGroup}</strong></span>
+                      </div>
                     </div>
-                    <button onClick={() => { setSlotDate('2026-08-28'); setSlotTime('19:00'); setShowSlotModal(true); }} className="px-4 py-2 bg-emerald-500 text-slate-950 font-black text-xs rounded-xl">+ حجز موعد جديد</button>
+                    <button
+                      onClick={() => { setSlotDate('2026-09-05'); setSlotTime('19:00'); setShowSlotModal(true); }}
+                      className="px-5 py-3 bg-white hover:bg-sky-50 text-slate-900 font-black text-xs rounded-2xl shadow-lg transition"
+                    >
+                      + حجز موعد جديد بالمركز
+                    </button>
                   </div>
 
-                  <div className="flex bg-white p-1.5 rounded-2xl border gap-1 text-xs font-bold">
-                    <button onClick={() => setPatientTab('appointments')} className={"flex-1 py-2 rounded-xl " + (patientTab === 'appointments' ? 'bg-slate-900 text-white' : 'text-slate-600')}>مواعيدي</button>
-                    <button onClick={() => setPatientTab('emr')} className={"flex-1 py-2 rounded-xl " + (patientTab === 'emr' ? 'bg-emerald-600 text-white' : 'text-slate-600')}>سجلي الطبي EMR</button>
-                    <button onClick={() => setPatientTab('prescriptions')} className={"flex-1 py-2 rounded-xl " + (patientTab === 'prescriptions' ? 'bg-teal-600 text-white' : 'text-slate-600')}>روشتاتي</button>
-                    <button onClick={() => setPatientTab('invoices')} className={"flex-1 py-2 rounded-xl " + (patientTab === 'invoices' ? 'bg-cyan-600 text-white' : 'text-slate-600')}>فواتيري</button>
+                  <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200/80 shadow-sm gap-1 overflow-x-auto text-xs font-bold">
+                    <button onClick={() => setPatientTab('appointments')} className={"flex-1 min-w-[110px] py-2.5 rounded-xl transition " + (patientTab === 'appointments' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100')}>
+                      📅 مواعيدي ({appointments.filter(a => a.patientId === selectedPatient.id).length})
+                    </button>
+                    <button onClick={() => setPatientTab('odontogram')} className={"flex-1 min-w-[130px] py-2.5 rounded-xl transition " + (patientTab === 'odontogram' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100')}>
+                      🦷 مخطط الأسنان ({selectedPatient.dentalRecords?.length || 0})
+                    </button>
+                    <button onClick={() => setPatientTab('derma')} className={"flex-1 min-w-[130px] py-2.5 rounded-xl transition " + (patientTab === 'derma' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100')}>
+                      ✨ جلسات الجلدية ({selectedPatient.dermatologyRecords?.length || 0})
+                    </button>
+                    <button onClick={() => setPatientTab('prescriptions')} className={"flex-1 min-w-[110px] py-2.5 rounded-xl transition " + (patientTab === 'prescriptions' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100')}>
+                      📄 الروشتات ({prescriptions.filter(r => r.patientId === selectedPatient.id).length})
+                    </button>
+                    <button onClick={() => setPatientTab('invoices')} className={"flex-1 min-w-[120px] py-2.5 rounded-xl transition " + (patientTab === 'invoices' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100')}>
+                      🧾 الفواتير الضريبية ({invoices.filter(i => i.patientId === selectedPatient.id).length})
+                    </button>
                   </div>
 
                   {patientTab === 'appointments' && (
-                    <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4">
-                      <h3 className="text-sm font-black text-slate-900">مواعيدك القادمة والسابقة</h3>
-                      <div className="space-y-3">
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {appointments.filter(a => a.patientId === selectedPatient.id).map(a => (
-                          <div key={a.id} className="p-4 rounded-xl border bg-slate-50 flex justify-between items-center text-xs">
+                          <div key={a.id} className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-3 flex flex-col justify-between">
                             <div>
-                              <div className="font-black text-slate-900">{a.serviceName}</div>
-                              <div className="text-slate-500 mt-0.5">مع الطبيب: {a.doctorName} | التاريخ: {a.date} ({a.time})</div>
+                              <div className="flex justify-between items-center mb-2">
+                                <span className={"text-[10px] font-bold px-2.5 py-1 rounded-full border " + (a.specialty === 'dental' ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-teal-50 text-teal-800 border-teal-200')}>
+                                  {a.specialty === 'dental' ? '🦷 عيادة الأسنان' : '✨ عيادة الجلدية'}
+                                </span>
+                                <span className="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-2.5 py-1 rounded-full">{a.statusLabel}</span>
+                              </div>
+                              <h4 className="text-sm font-black text-slate-900">{a.serviceName}</h4>
+                              <div className="text-xs text-slate-600 mt-1">الطبيب: <strong className="text-slate-900">{a.doctorName}</strong></div>
+                              <div className="text-xs text-slate-500 font-mono mt-1">📅 {a.date} • ⏰ {a.time}</div>
                             </div>
-                            <span className="px-3 py-1 bg-emerald-100 text-emerald-700 font-bold rounded-lg">{a.statusLabel}</span>
+                            <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
+                              <span className="text-xs font-bold text-brand-700">{a.price} {settings.currency}</span>
+                              {a.status === 'scheduled' && (
+                                <button onClick={() => handleCancelAppt(a.id)} className="text-xs text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl font-bold transition border border-rose-200">
+                                  إلغاء الموعد
+                                </button>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {patientTab === 'emr' && (
-                    <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
-                      <h3 className="text-sm font-black text-slate-900">الملف الصحي الإلكتروني (EMR)</h3>
-                      <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
-                        <div><span className="text-slate-500">الحساسية:</span> <strong className="text-rose-600">{selectedPatient.allergies}</strong></div>
-                        <div><span className="text-slate-500">الأمراض المزمنة:</span> <strong>{selectedPatient.chronicDiseases}</strong></div>
+                  {patientTab === 'odontogram' && (
+                    <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-6">
+                      <div className="border-b border-slate-100 pb-3">
+                        <h3 className="text-sm font-black text-slate-900">🦷 مخطط الأسنان السريري للمريض (FDI ISO 3950)</h3>
+                        <p className="text-xs text-slate-500">سجل تشخيصات وحشوات الأسنان</p>
                       </div>
-                      <h4 className="font-bold mt-4">سجل العناية والتجميل والأسنان:</h4>
-                      <div className="space-y-2">
-                        {selectedPatient.dermatologyRecords.map((r, i) => (
-                          <div key={i} className="p-3 border rounded-xl bg-teal-50/50">
-                            <div className="font-bold text-teal-900">{r.treatment} ({r.date})</div>
-                            <div className="text-slate-600 mt-1">الطبيب: {r.doctor} | المعايير: {r.parameters}</div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {QUADRANTS.map(q => (
+                          <div key={q.name} className="p-4 bg-slate-50 rounded-2xl border border-slate-200/60">
+                            <div className="text-xs font-bold text-slate-700 mb-2">{q.name}</div>
+                            <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
+                              {q.teeth.map(tNum => {
+                                const rec = (selectedPatient.dentalRecords || []).find(r => r.toothNumber === tNum);
+                                const condObj = rec ? TOOTH_CONDITIONS[rec.condition] : TOOTH_CONDITIONS['sound'];
+                                return (
+                                  <div key={tNum} className={"p-2 rounded-xl border text-center flex flex-col justify-center items-center min-h-[50px] shadow-sm " + (condObj ? condObj.color : 'bg-white')}>
+                                    <span className="font-mono font-black text-xs">#{tNum}</span>
+                                    <span className="text-[8px] font-bold truncate max-w-[40px]">{rec ? rec.conditionLabel : 'سليم'}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {patientTab === 'derma' && (
+                    <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+                      <h3 className="text-sm font-black text-slate-900">✨ سجل جلسات الجلدية والليزر ومعايير الأجهزة</h3>
+                      <div className="space-y-3">
+                        {selectedPatient.dermatologyRecords?.map((s, i) => (
+                          <div key={i} className="p-4 rounded-2xl bg-teal-50/50 border border-teal-100 text-xs space-y-2">
+                            <div className="flex justify-between items-start font-black text-teal-950">
+                              <div>{s.treatment} ({s.device})</div>
+                              <span className="font-mono bg-white px-2 py-0.5 rounded border">{s.date}</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 border-t border-teal-100">
+                              <div>الطاقة: <strong>{s.fluence}</strong></div>
+                              <div>النبضة: <strong>{s.pulseWidth}</strong></div>
+                              <div>البقعة: <strong>{s.spotSize}</strong></div>
+                            </div>
+                            <div className="text-slate-600">المناطق: {s.treatedAreas?.join(', ')} | {s.notes}</div>
                           </div>
                         ))}
                       </div>
@@ -449,383 +1296,1263 @@
                   )}
 
                   {patientTab === 'prescriptions' && (
-                    <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
-                      <h3 className="text-sm font-black text-slate-900">الروشتات الطبية الإلكترونية</h3>
-                      {prescriptions.filter(r => r.patientId === selectedPatient.id).map(r => (
-                        <div key={r.id} className="p-4 border rounded-xl bg-slate-50 space-y-2">
-                          <div className="flex justify-between font-bold">
-                            <span>{r.diagnosis}</span>
-                            <span className="text-emerald-600">{r.id}</span>
+                    <div className="space-y-3">
+                      {prescriptions.filter(r => r.patientId === selectedPatient.id).map(rx => (
+                        <div key={rx.id} className="p-5 rounded-3xl bg-white border shadow-sm space-y-3">
+                          <div className="flex justify-between items-center border-b pb-2">
+                            <div><div className="font-black text-sm">{rx.diagnosis}</div><div className="text-xs text-slate-500">{rx.doctorName}</div></div>
+                            <span className="font-mono font-bold text-xs text-brand-700">{rx.id} ({rx.date})</span>
                           </div>
-                          <div className="text-slate-500">الطبيب: {r.doctorName} ({r.doctorTitle}) - {r.date}</div>
-                          <div className="pt-2 border-t space-y-1">
-                            {r.items.map((it, idx) => (
-                              <div key={idx} className="flex justify-between bg-white p-2 rounded border">
-                                <span className="font-bold text-slate-800">{it.drugName}</span>
-                                <span className="text-slate-600">{it.dosage} - {it.frequency} ({it.duration})</span>
+                          <div className="space-y-1 text-xs">
+                            {rx.items.map((it, idx) => (
+                              <div key={idx} className="p-2 bg-brand-50/50 rounded-xl flex justify-between">
+                                <span className="font-bold">{it.drugName} - {it.dosage}</span>
+                                <span>{it.frequency} ({it.duration})</span>
                               </div>
                             ))}
                           </div>
+                          <button onClick={() => { setSelectedRx(rx); setTimeout(() => window.print(), 150); }} className="px-3 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-bold">
+                            طباعة الوصفة
+                          </button>
                         </div>
                       ))}
                     </div>
                   )}
 
                   {patientTab === 'invoices' && (
-                    <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
-                      <h3 className="text-sm font-black text-slate-900">الفواتير الضريبية (ZATCA)</h3>
-                      {invoices.filter(i => i.patientId === selectedPatient.id).map(inv => (
-                        <div key={inv.id} className="p-4 border rounded-xl bg-slate-50 space-y-2">
-                          <div className="flex justify-between font-bold">
-                            <span>{inv.invoiceNumber}</span>
-                            <span className="text-cyan-700">{inv.totalWithVat} ريال (شامل الضريبة)</span>
+                    <div className="space-y-3">
+                      {invoices.filter(i => i.patientId === selectedPatient.id).map(inv => {
+                        const zatcaB64 = generateZatcaTlvBase64(settings.name, settings.taxNumber, inv.date + 'T' + (inv.time || '18:00') + ':00Z', inv.totalWithVat, inv.vatAmount);
+                        const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" + encodeURIComponent(zatcaB64);
+                        return (
+                          <div key={inv.id} className="p-5 rounded-3xl bg-white border shadow-sm space-y-3">
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <div><div className="font-mono font-black">{inv.invoiceNumber}</div><div className="text-xs text-slate-500">{inv.date} • {inv.paymentMethodLabel}</div></div>
+                              <div className="text-left font-black text-base text-brand-700">{inv.totalWithVat} {settings.currency}</div>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <img src={qrUrl} alt="ZATCA QR" className="w-12 h-12 rounded border" />
+                              <button onClick={() => { setSelectedInv(inv); setTimeout(() => window.print(), 150); }} className="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold shadow-sm">
+                                طباعة الفاتورة الضريبية
+                              </button>
+                            </div>
                           </div>
-                          <div className="text-slate-500">التاريخ: {inv.date} | طريقة الدفع: {inv.paymentMethodLabel}</div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
               )}
 
+              {/* 2. DOCTOR DASHBOARD & CLINICAL ODONTOGRAM */}
               {currentPath === '/dashboard/doctor' && (
                 <div className="space-y-6">
-                  <div className="bg-gradient-to-l from-emerald-900 via-slate-900 to-teal-950 rounded-3xl p-6 text-white shadow-xl flex justify-between items-center">
+                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-xl flex justify-between items-center"}>
                     <div>
-                      <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-bold text-emerald-300">عيادة الطبيب</span>
-                      <h2 className="text-2xl font-black mt-2">مرحباً بك، {user.name} 🩺</h2>
-                      <div className="text-xs text-emerald-200 mt-1">{user.specialtyName} • جاهز لاستقبال الحالات</div>
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-bold mb-2">
+                        <span>🩺</span>
+                        <span>محطة الطبيب السريرية وتوثيق الحالات (EMR Station)</span>
+                      </span>
+                      <h2 className="text-2xl sm:text-3xl font-black">{user.name} 🌸</h2>
+                      <p className="text-xs sm:text-sm text-sky-200 mt-1">{user.specialtyName} • مركز {settings.name}</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-1 bg-white p-6 rounded-2xl border shadow-sm space-y-4 text-xs">
-                      <h3 className="font-black text-slate-900">قائمة الانتظار في العيادة</h3>
-                      <div className="space-y-2">
-                        {appointments.filter(a => a.doctorId === user.id || a.status === 'in-progress' || a.status === 'waiting').map(a => (
-                          <div key={a.id} className="p-3 border rounded-xl bg-slate-50 flex justify-between items-center">
-                            <div>
-                              <div className="font-bold text-slate-900">{a.patientName}</div>
-                              <div className="text-[10px] text-slate-500">{a.serviceName} ({a.time})</div>
+                  <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-600">المريض قيد الكشف الآن:</span>
+                      <select
+                        value={selectedPatient.id}
+                        onChange={e => {
+                          const p = patients.find(pt => pt.id === e.target.value);
+                          if (p) setSelectedPatient(p);
+                        }}
+                        className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-brand-900"
+                      >
+                        {patients.map(p => (
+                          <option key={p.id} value={p.id}>{p.name} (هوية: {p.nationalId})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <button
+                      onClick={() => setShowDermaModal(true)}
+                      className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5"
+                    >
+                      <span>✨</span>
+                      <span>تسجيل جلسة جلدية / ليزر</span>
+                    </button>
+                  </div>
+
+                  {/* INTERACTIVE DENTAL ODONTOGRAM */}
+                  <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
+                      <div>
+                        <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                          <span>🦷</span>
+                          <span>مخطط الأسنان التفاعلي (FDI 32-Tooth Visual Odontogram)</span>
+                        </h3>
+                        <p className="text-xs text-slate-500">انقر على أي سن لتحديد الحالة وحفظ الإجراء مباشرة في ملف {selectedPatient.name}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 text-[10px]">
+                        {Object.entries(TOOTH_CONDITIONS).slice(0, 5).map(([key, val]) => (
+                          <span key={key} className={"px-2 py-0.5 rounded font-bold border " + val.badgeColor}>
+                            {val.label.split(' ')[0]}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {QUADRANTS.slice(0, 2).map(q => (
+                          <div key={q.name} className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/60">
+                            <div className="text-xs font-bold text-slate-700 mb-2">{q.name}</div>
+                            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                              {q.teeth.map(tNum => {
+                                const rec = (selectedPatient.dentalRecords || []).find(r => r.toothNumber === tNum);
+                                const isSelected = selectedTooth === tNum;
+                                const condObj = rec ? TOOTH_CONDITIONS[rec.condition] : TOOTH_CONDITIONS['sound'];
+                                return (
+                                  <button
+                                    key={tNum}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedTooth(tNum);
+                                      if (rec) {
+                                        setToothCondition(rec.condition);
+                                        setToothSurface(rec.surface || 'Occlusal (O)');
+                                        setToothNotes(rec.notes || '');
+                                      }
+                                    }}
+                                    className={"p-2.5 rounded-2xl border text-center transition flex flex-col justify-center items-center min-h-[58px] shadow-sm relative " + 
+                                      (isSelected ? 'ring-4 ring-brand-500 scale-105 z-10 ' : '') + 
+                                      (condObj ? condObj.color : 'bg-white text-slate-800')}
+                                  >
+                                    <span className="font-mono font-black text-xs">#{tNum}</span>
+                                    <span className="text-[9px] font-bold truncate max-w-[45px]">{rec ? rec.conditionLabel : 'سليم'}</span>
+                                  </button>
+                                );
+                              })}
                             </div>
-                            <span className="px-2 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded">{a.statusLabel}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {QUADRANTS.slice(2, 4).map(q => (
+                          <div key={q.name} className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/60">
+                            <div className="text-xs font-bold text-slate-700 mb-2">{q.name}</div>
+                            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                              {q.teeth.map(tNum => {
+                                const rec = (selectedPatient.dentalRecords || []).find(r => r.toothNumber === tNum);
+                                const isSelected = selectedTooth === tNum;
+                                const condObj = rec ? TOOTH_CONDITIONS[rec.condition] : TOOTH_CONDITIONS['sound'];
+                                return (
+                                  <button
+                                    key={tNum}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedTooth(tNum);
+                                      if (rec) {
+                                        setToothCondition(rec.condition);
+                                        setToothSurface(rec.surface || 'Occlusal (O)');
+                                        setToothNotes(rec.notes || '');
+                                      }
+                                    }}
+                                    className={"p-2.5 rounded-2xl border text-center transition flex flex-col justify-center items-center min-h-[58px] shadow-sm relative " + 
+                                      (isSelected ? 'ring-4 ring-brand-500 scale-105 z-10 ' : '') + 
+                                      (condObj ? condObj.color : 'bg-white text-slate-800')}
+                                  >
+                                    <span className="font-mono font-black text-xs">#{tNum}</span>
+                                    <span className="text-[9px] font-bold truncate max-w-[45px]">{rec ? rec.conditionLabel : 'سليم'}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    <div className="lg:col-span-2 bg-white p-6 rounded-2xl border shadow-sm space-y-4 text-xs">
-                      <h3 className="font-black text-slate-900">تشخيص الأسنان التفاعلي (Dental Odontogram)</h3>
-                      <p className="text-slate-500">اختر السن وسجل الحالة (علاج عصب، حشوة، تركيبات):</p>
-                      <div className="grid grid-cols-8 gap-2">
-                        {[18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28].map(n => (
-                          <button key={n} onClick={() => setSelectedTooth(n)} className={"p-3 rounded-xl border font-mono font-bold text-center transition " + (selectedTooth === n ? 'bg-emerald-600 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-800')}>
-                            #{n}
-                          </button>
-                        ))}
-                      </div>
-                      {selectedTooth && (
-                        <form onSubmit={handleSaveTooth} className="space-y-3 pt-4 border-t">
-                          <div className="font-bold text-emerald-700">تسجيل إجراء للسن رقم: #{selectedTooth}</div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <select value={toothCond} onChange={e => setToothCond(e.target.value)} className="p-2 border rounded-xl">
-                              <option value="composite-filling">حشوة تجميلية</option>
-                              <option value="root-canal">علاج عصب</option>
-                              <option value="crown">تاج زيركون</option>
-                            </select>
-                            <input type="text" value={toothNote} onChange={e => setToothNote(e.target.value)} placeholder="ملاحظات إضافية..." className="p-2 border rounded-xl" />
+                    {selectedTooth && (
+                      <form onSubmit={handleSaveToothCondition} className="p-5 bg-brand-50/70 border border-brand-200 rounded-2xl space-y-4 text-xs">
+                        <div className="flex justify-between items-center">
+                          <div className="font-black text-brand-900 text-sm">
+                            تشخيص السن رقم: #{selectedTooth} (المريض: {selectedPatient.name})
                           </div>
-                          <button type="submit" className="w-full py-2.5 bg-emerald-600 text-white font-black rounded-xl">حفظ التشخيص في سجل المريض</button>
-                        </form>
+                          <button type="button" onClick={() => setSelectedTooth(null)} className="text-slate-400 hover:text-slate-600 font-bold">✕ إغلاق</button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">الحالة السريرية:</label>
+                            <select value={toothCondition} onChange={e => setToothCondition(e.target.value)} className="w-full p-2.5 bg-white border border-brand-200 rounded-xl font-bold">
+                              {Object.entries(TOOTH_CONDITIONS).map(([k, v]) => (
+                                <option key={k} value={k}>{v.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">السطح المعالج:</label>
+                            <select value={toothSurface} onChange={e => setToothSurface(e.target.value)} className="w-full p-2.5 bg-white border border-brand-200 rounded-xl font-bold">
+                              <option value="Occlusal (O)">إطباقي - Occlusal (O)</option>
+                              <option value="Mesial (M)">إنسي - Mesial (M)</option>
+                              <option value="Distal (D)">وحشي - Distal (D)</option>
+                              <option value="Buccal (B)">دهليزي - Buccal (B)</option>
+                              <option value="Lingual (L)">لساني - Lingual (L)</option>
+                              <option value="MOD">مركب - MOD</option>
+                              <option value="Full Crown">تاج كامل - Full Crown</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">ملاحظات الإجراء:</label>
+                            <input type="text" value={toothNotes} onChange={e => setToothNotes(e.target.value)} placeholder="تفاصيل العلاج..." className="w-full p-2.5 bg-white border border-brand-200 rounded-xl font-medium" />
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-2 pt-2">
+                          <button type="button" onClick={() => setSelectedTooth(null)} className="px-4 py-2 bg-white border rounded-xl font-bold">إلغاء</button>
+                          <button type="submit" className="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-black shadow-md">حفظ التشخيص في ملف المريض 💾</button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 3. RECEPTION DASHBOARD & INTERACTIVE CALENDAR */}
+              {currentPath === '/dashboard/reception' && (
+                <div className="space-y-6">
+                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-xl flex justify-between items-center"}>
+                    <div>
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-bold mb-2">
+                        <span>📅</span>
+                        <span>كاونتر الاستقبال والتقويم الذكي (Reception Desk)</span>
+                      </span>
+                      <h2 className="text-2xl sm:text-3xl font-black">حجز المواعيد وطابور الانتظار</h2>
+                      <p className="text-xs text-sky-200 mt-1">مركز {settings.name} • {settings.branch}</p>
+                    </div>
+                    <button
+                      onClick={() => { setSlotDate('2026-09-04'); setSlotTime('18:00'); setShowSlotModal(true); }}
+                      className="px-5 py-3 bg-white hover:bg-sky-50 text-slate-900 font-black text-xs rounded-2xl shadow-lg transition"
+                    >
+                      + حجز موعد سريع
+                    </button>
+                  </div>
+
+                  {/* Interactive Calendar Grid (Click-to-Add) */}
+                  <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-sm font-black text-slate-900">جدول المواعيد الأسبوعي (انقر على أي خانة شاغرة لحجز الموعد فورياً)</h3>
+                      <span className="text-xs text-brand-600 font-bold">ميزة Click-to-Add مفعلة ⚡</span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <div className="min-w-[700px]">
+                        <div className="grid grid-cols-6 gap-2 text-center text-xs font-bold text-slate-600 mb-2">
+                          <div className="p-2.5 bg-slate-100 rounded-xl">الوقت</div>
+                          {weekDays.map(d => (
+                            <div key={d.date} className="p-2.5 bg-slate-100 rounded-xl">
+                              <div>{d.label}</div>
+                              <div className="text-[10px] text-slate-400 font-mono mt-0.5">{d.date}</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="space-y-2">
+                          {timeSlots.map(timeStr => (
+                            <div key={timeStr} className="grid grid-cols-6 gap-2 items-stretch">
+                              <div className="p-2 bg-slate-50 border border-slate-200/60 rounded-xl flex items-center justify-center font-mono font-bold text-xs text-slate-600">
+                                {timeStr}
+                              </div>
+                              {weekDays.map(d => {
+                                const slotAppts = appointments.filter(a => a.date === d.date && a.time.startsWith(timeStr.substring(0, 2)));
+                                return (
+                                  <div
+                                    key={d.date}
+                                    onClick={() => { setSlotDate(d.date); setSlotTime(timeStr); setShowSlotModal(true); }}
+                                    className={"p-2 rounded-xl border text-xs cursor-pointer min-h-[58px] flex flex-col justify-center transition " + (
+                                      slotAppts.length > 0 
+                                        ? 'bg-brand-50/80 border-brand-200 hover:border-brand-400' 
+                                        : 'bg-white border-dashed border-slate-200 hover:border-brand-400 hover:bg-brand-50/30 text-center text-slate-400 text-[10px]'
+                                    )}
+                                  >
+                                    {slotAppts.length > 0 ? (
+                                      slotAppts.map(a => (
+                                        <div key={a.id} className="p-1.5 bg-brand-600 text-white rounded-lg text-[10px] font-bold truncate shadow-sm">
+                                          {a.patientName} ({a.time})
+                                        </div>
+                                      ))
+                                    ) : (
+                                      <span className="font-bold">+ متاح للحجز</span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 4. FINANCE DASHBOARD & ZATCA ANALYTICS */}
+              {currentPath === '/dashboard/finance' && (
+                <div className="space-y-6">
+                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-xl flex justify-between items-center"}>
+                    <div>
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-bold mb-2">
+                        <span>💼</span>
+                        <span>التقارير المالية والامتثال الضريبي (ZATCA e-Invoicing)</span>
+                      </span>
+                      <h2 className="text-2xl sm:text-3xl font-black">الفوترة وضريبة القيمة المضافة ({settings.vatRate}%)</h2>
+                      <p className="text-xs font-mono text-sky-200 mt-1">الرقم الضريبي للمركز: {settings.taxNumber}</p>
+                    </div>
+                  </div>
+
+                  {/* KPI Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
+                      <div className="text-slate-500 font-bold">إجمالي الإيرادات (قبل الضريبة)</div>
+                      <div className="text-2xl font-black text-slate-900 font-mono">{totalClinicGross} {settings.currency}</div>
+                    </div>
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
+                      <div className="text-slate-500 font-bold">إجمالي ضريبة 15% ZATCA</div>
+                      <div className="text-2xl font-black text-emerald-600 font-mono">{totalClinicVat} {settings.currency}</div>
+                    </div>
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
+                      <div className="text-slate-500 font-bold">الإجمالي النهائي شامل الضريبة</div>
+                      <div className="text-2xl font-black text-brand-700 font-mono">{totalClinicWithVat} {settings.currency}</div>
+                    </div>
+                  </div>
+
+                  {/* Payment Breakdown Analytics */}
+                  <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+                    <h3 className="text-sm font-black text-slate-900">توزيع طرق التحصيل والمدفوعات (Payment Analytics)</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="p-4 bg-sky-50 rounded-2xl border border-sky-100">
+                        <div className="flex justify-between text-xs font-bold text-sky-950 mb-1">
+                          <span>مدى (Mada):</span>
+                          <span>{paymentBreakdown.mada.pct}% ({paymentBreakdown.mada.amount} {settings.currency})</span>
+                        </div>
+                        <div className="w-full bg-sky-200 rounded-full h-2">
+                          <div className="bg-sky-600 h-2 rounded-full" style={{ width: paymentBreakdown.mada.pct + '%' }}></div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-purple-50 rounded-2xl border border-purple-100">
+                        <div className="flex justify-between text-xs font-bold text-purple-950 mb-1">
+                          <span>Apple Pay:</span>
+                          <span>{paymentBreakdown.apple.pct}% ({paymentBreakdown.apple.amount} {settings.currency})</span>
+                        </div>
+                        <div className="w-full bg-purple-200 rounded-full h-2">
+                          <div className="bg-purple-600 h-2 rounded-full" style={{ width: paymentBreakdown.apple.pct + '%' }}></div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                        <div className="flex justify-between text-xs font-bold text-emerald-950 mb-1">
+                          <span>نقدي (Cash):</span>
+                          <span>{paymentBreakdown.cash.pct}% ({paymentBreakdown.cash.amount} {settings.currency})</span>
+                        </div>
+                        <div className="w-full bg-emerald-200 rounded-full h-2">
+                          <div className="bg-emerald-600 h-2 rounded-full" style={{ width: paymentBreakdown.cash.pct + '%' }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 5. OWNER & DOCTOR PROFITS DASHBOARD */}
+              {currentPath === '/dashboard/owner' && (
+                <div className="space-y-6">
+                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-xl flex justify-between items-center"}>
+                    <div>
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-bold mb-2">
+                        <span>👑</span>
+                        <span>لوحة مالك المركز والمدير التنفيذي (Executive Suite)</span>
+                      </span>
+                      <h2 className="text-2xl sm:text-3xl font-black">تقرير أرباح المركز وعمولات الأطباء</h2>
+                      <p className="text-xs text-sky-200 mt-1">مركز {settings.name} • {settings.branch}</p>
+                    </div>
+                    <button
+                      onClick={() => setCurrentPath('/settings')}
+                      className="px-4 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold backdrop-blur-sm border border-white/20"
+                    >
+                      ⚙️ إعدادات المركز (SaaS)
+                    </button>
+                  </div>
+
+                  {/* Executive Metric Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
+                      <div className="text-slate-500 font-bold">إجمالي الإيرادات المحققة</div>
+                      <div className="text-2xl font-black text-slate-900 font-mono">{totalClinicGross} {settings.currency}</div>
+                    </div>
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
+                      <div className="text-slate-500 font-bold">إجمالي عمولات الأطباء المستحقة</div>
+                      <div className="text-2xl font-black text-amber-600 font-mono">{totalDoctorComms} {settings.currency}</div>
+                    </div>
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
+                      <div className="text-slate-500 font-bold">صافي أرباح المركز التشغيلي</div>
+                      <div className="text-2xl font-black text-emerald-600 font-mono">{totalClinicNetProfit} {settings.currency}</div>
+                    </div>
+                  </div>
+
+                  {/* Doctor Profit & Commission Module */}
+                  <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-sm font-black text-slate-900">وحدة تتبع ومراقبة عمولات ورواتب الأطباء</h3>
+                      <span className="text-xs text-slate-500">حسابات ديناميكية فورية</span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-right text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
+                            <th className="p-3">الطبيب</th>
+                            <th className="p-3">الراتب الأساسي</th>
+                            <th className="p-3 text-center">العمولة %</th>
+                            <th className="p-3">الإيراد المنجز</th>
+                            <th className="p-3">العمولة المستحقة</th>
+                            <th className="p-3">إجمالي الاستحقاق</th>
+                            <th className="p-3">صافي دخل المركز</th>
+                            <th className="p-3 text-center">إجراء</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {doctorStats.map(doc => (
+                            <tr key={doc.id} className="hover:bg-slate-50 transition">
+                              <td className="p-3 font-bold text-slate-900">
+                                <div>{doc.name}</div>
+                                <div className="text-[10px] text-slate-500 font-normal">{doc.specialtyName}</div>
+                              </td>
+                              <td className="p-3 font-mono font-bold text-slate-700">{doc.baseSalary} {settings.currency}</td>
+                              <td className="p-3 text-center font-mono font-bold">
+                                {editingDocId === doc.id ? (
+                                  <input
+                                    type="number"
+                                    value={tempRate}
+                                    onChange={e => setTempRate(e.target.value)}
+                                    className="w-14 p-1 border rounded text-center text-xs"
+                                  />
+                                ) : (
+                                  <span className="bg-amber-50 text-amber-800 px-2 py-0.5 rounded font-black border border-amber-200">
+                                    {doc.commissionRate}%
+                                  </span>
+                                )}
+                              </td>
+                              <td className="p-3 font-mono font-bold text-slate-900">{doc.gross} {settings.currency}</td>
+                              <td className="p-3 font-mono font-bold text-amber-600">{doc.commAmt} {settings.currency}</td>
+                              <td className="p-3 font-mono font-black text-slate-900">{doc.payout} {settings.currency}</td>
+                              <td className="p-3 font-mono font-black text-emerald-600">{doc.clinicNet} {settings.currency}</td>
+                              <td className="p-3 text-center">
+                                {editingDocId === doc.id ? (
+                                  <button onClick={() => handleUpdateDoctorCommission(doc.id)} className="px-3 py-1 bg-emerald-600 text-white rounded-lg font-bold text-[11px]">حفظ</button>
+                                ) : (
+                                  <button onClick={() => { setEditingDocId(doc.id); setTempRate(String(doc.commissionRate)); }} className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[11px]">تعديل %</button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 6. APPOINTMENTS PAGE */}
+              {currentPath === '/appointments' && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="text-lg font-black text-slate-900">جدول المواعيد الشامل (Interactive Schedule)</h2>
+                      <p className="text-xs text-slate-500">مركز {settings.name}</p>
+                    </div>
+                    <button
+                      onClick={() => { setSlotDate('2026-09-04'); setSlotTime('18:00'); setShowSlotModal(true); }}
+                      className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm"
+                    >
+                      + حجز موعد جديد
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {appointments.map(a => (
+                      <div key={a.id} className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-3 flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between items-center mb-2">
+                            <span className={"text-[10px] font-bold px-2 py-0.5 rounded-full " + (a.specialty === 'dental' ? 'bg-blue-50 text-blue-800' : 'bg-teal-50 text-teal-800')}>
+                              {a.specialty === 'dental' ? 'طب الأسنان' : 'الجلدية والتجميل'}
+                            </span>
+                            <span className="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded-full">{a.statusLabel}</span>
+                          </div>
+                          <div className="font-black text-sm text-slate-900">{a.patientName}</div>
+                          <div className="text-xs text-brand-700 font-bold mt-0.5">{a.serviceName} ({a.price} {settings.currency})</div>
+                          <div className="text-xs text-slate-500 mt-1">الطبيب: {a.doctorName}</div>
+                          <div className="text-xs font-mono text-slate-400 mt-0.5">📅 {a.date} ({a.time})</div>
+                        </div>
+                        <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
+                          <button
+                            onClick={() => { const p = patients.find(pt => pt.id === a.patientId); if (p) { setSelectedPatient(p); setCurrentPath('/patients'); } }}
+                            className="text-xs text-brand-600 font-bold hover:underline"
+                          >
+                            استعراض ملف المريض EMR ←
+                          </button>
+                          {a.status === 'scheduled' && (
+                            <button onClick={() => handleCancelAppt(a.id)} className="text-[11px] text-rose-600 bg-rose-50 px-2 py-1 rounded font-bold">إلغاء</button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 7. PATIENTS EMR & ODONTOGRAM DIRECTORY */}
+              {currentPath === '/patients' && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="text-lg font-black text-slate-900">سجل المرضى والملف الطبي الإلكتروني (EMR)</h2>
+                      <p className="text-xs text-slate-500">مركز {settings.name}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Patient List */}
+                    <div className="lg:col-span-4 space-y-2">
+                      {patients.map(p => (
+                        <div
+                          key={p.id}
+                          onClick={() => setSelectedPatient(p)}
+                          className={"p-4 rounded-2xl border cursor-pointer transition text-xs space-y-1 " + (
+                            selectedPatient?.id === p.id 
+                              ? 'bg-brand-50/80 border-brand-500 shadow-sm' 
+                              : 'bg-white border-slate-200/80 hover:bg-slate-50'
+                          )}
+                        >
+                          <div className="font-black text-slate-900 flex justify-between">
+                            <span>{p.name}</span>
+                            <span className="font-mono text-slate-400 text-[11px]">{p.id}</span>
+                          </div>
+                          <div className="text-slate-500 font-mono" dir="ltr">{p.phone}</div>
+                          <div className="text-[11px] text-slate-600">الهوية: <span className="font-mono">{p.nationalId}</span> | دم: {p.bloodGroup}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Patient Detail Panel */}
+                    <div className="lg:col-span-8">
+                      {selectedPatient && (
+                        <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-6">
+                          <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+                            <div>
+                              <h3 className="text-base font-black text-slate-900">{selectedPatient.name}</h3>
+                              <div className="text-xs text-slate-500 mt-0.5">هوية: <span className="font-mono">{selectedPatient.nationalId}</span> • العمر: {selectedPatient.age} سنة • فصيلة: {selectedPatient.bloodGroup}</div>
+                            </div>
+                            <span className="text-xs bg-rose-50 text-rose-700 px-3 py-1 rounded-xl font-bold border border-rose-200">
+                              حساسية: {selectedPatient.allergies}
+                            </span>
+                          </div>
+
+                          {/* Dental Teeth Records */}
+                          <div className="space-y-3">
+                            <h4 className="text-xs font-black text-slate-900">🦷 سجل علاجات الأسنان:</h4>
+                            {(!selectedPatient.dentalRecords || selectedPatient.dentalRecords.length === 0) ? (
+                              <div className="text-xs text-slate-400">لا توجد علاجات مسجلة.</div>
+                            ) : (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {selectedPatient.dentalRecords.map((r, idx) => (
+                                  <div key={idx} className="p-3 bg-brand-50/50 rounded-xl border border-brand-100 text-xs">
+                                    <div className="font-bold text-brand-900">السن #{r.toothNumber} - {r.conditionLabel}</div>
+                                    <div className="text-slate-600 text-[11px] mt-0.5">{r.notes} • {r.date}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Dermatology Records */}
+                          <div className="space-y-3 pt-3 border-t border-slate-100">
+                            <h4 className="text-xs font-black text-slate-900">✨ سجل جلسات الجلدية والليزر:</h4>
+                            {(!selectedPatient.dermatologyRecords || selectedPatient.dermatologyRecords.length === 0) ? (
+                              <div className="text-xs text-slate-400">لا توجد جلسات ليزر مسجلة.</div>
+                            ) : (
+                              <div className="space-y-2">
+                                {selectedPatient.dermatologyRecords.map((s, idx) => (
+                                  <div key={idx} className="p-3 bg-teal-50/50 rounded-xl border border-teal-100 text-xs">
+                                    <div className="font-bold text-teal-900">{s.treatment} ({s.device})</div>
+                                    <div className="text-slate-600 text-[11px] mt-0.5">طاقة: {s.fluence} | نبضة: {s.pulseWidth} | بقعة: {s.spotSize} | {s.notes}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
               )}
 
-              {currentPath === '/dashboard/reception' && (
-                <div className="space-y-6">
-                  <div className="bg-gradient-to-l from-teal-950 via-slate-900 to-cyan-950 rounded-3xl p-6 text-white shadow-xl flex justify-between items-center">
-                    <div>
-                      <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-bold text-teal-300">مكتب الاستقبال</span>
-                      <h2 className="text-2xl font-black mt-2">إدارة المواعيد والمرضى 📅</h2>
-                      <div className="text-xs text-teal-200 mt-1">حجز المواعيد السريعة وإصدار الفواتير</div>
-                    </div>
-                    <button onClick={() => setShowSlotModal(true)} className="px-4 py-2 bg-teal-500 text-slate-950 font-black text-xs rounded-xl">+ حجز موعد جديد</button>
-                  </div>
-
-                  <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
-                    <h3 className="font-black text-slate-900">جدول مواعيد اليوم في المركز</h3>
-                    <div className="space-y-2">
-                      {appointments.map(a => (
-                        <div key={a.id} className="p-4 border rounded-xl bg-slate-50 flex justify-between items-center">
-                          <div>
-                            <div className="font-black text-slate-900">{a.patientName} - {a.serviceName}</div>
-                            <div className="text-slate-500 mt-0.5">الطبيب: {a.doctorName} | الموعد: {a.date} ({a.time})</div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-lg">{a.statusLabel}</span>
-                            <button onClick={() => handleCancelAppt(a.id)} className="px-2.5 py-1 bg-rose-50 text-rose-600 rounded font-bold hover:bg-rose-100">إلغاء</button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {currentPath === '/dashboard/finance' && (
-                <div className="space-y-6">
-                  <div className="bg-gradient-to-l from-cyan-950 via-slate-900 to-blue-950 rounded-3xl p-6 text-white shadow-xl">
-                    <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-bold text-cyan-300">الإدارة المالية</span>
-                    <h2 className="text-2xl font-black mt-2">التقارير المحاسبية وضريبة 15% ZATCA 💼</h2>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                    <div className="bg-white p-5 rounded-2xl border shadow-sm">
-                      <div className="text-slate-500">إجمالي الإيرادات (قبل الضريبة)</div>
-                      <div className="text-2xl font-black text-slate-900 mt-1">{totalClinicGross} ريال</div>
-                    </div>
-                    <div className="bg-white p-5 rounded-2xl border shadow-sm">
-                      <div className="text-slate-500">إجمالي ضريبة القيمة المضافة (15%)</div>
-                      <div className="text-2xl font-black text-emerald-600 mt-1">{totalClinicVat} ريال</div>
-                    </div>
-                    <div className="bg-white p-5 rounded-2xl border shadow-sm">
-                      <div className="text-slate-500">إجمالي الإيرادات (شامل الضريبة)</div>
-                      <div className="text-2xl font-black text-cyan-700 mt-1">{totalClinicWithVat} ريال</div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
-                    <h3 className="font-black text-slate-900">سجل الفواتير الضريبية الإلكترونية</h3>
-                    <div className="space-y-2">
-                      {invoices.map(inv => (
-                        <div key={inv.id} className="p-4 border rounded-xl bg-slate-50 flex justify-between items-center">
-                          <div>
-                            <div className="font-black text-slate-900">{inv.invoiceNumber} - {inv.patientName}</div>
-                            <div className="text-slate-500 mt-0.5">الطبيب: {inv.doctorName} | التاريخ: {inv.date}</div>
-                          </div>
-                          <div className="text-left font-mono font-bold text-cyan-700">
-                            {inv.totalWithVat} ريال (شامل 15%)
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {currentPath === '/dashboard/owner' && (
-                <div className="space-y-6">
-                  <div className="bg-gradient-to-l from-amber-950 via-slate-900 to-orange-950 rounded-3xl p-6 text-white shadow-xl">
-                    <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-bold text-amber-300">لوحة المالك والمدير العام</span>
-                    <h2 className="text-2xl font-black mt-2">أرباح المركز وعمولات الأطباء 👑</h2>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                    <div className="bg-white p-5 rounded-2xl border shadow-sm">
-                      <div className="text-slate-500">إجمالي إيرادات العيادة</div>
-                      <div className="text-2xl font-black text-slate-900 mt-1">{totalClinicGross} ريال</div>
-                    </div>
-                    <div className="bg-white p-5 rounded-2xl border shadow-sm">
-                      <div className="text-slate-500">إجمالي مستحقات الأطباء (رواتب + عمولات)</div>
-                      <div className="text-2xl font-black text-amber-600 mt-1">{totalDoctorComms} ريال</div>
-                    </div>
-                    <div className="bg-white p-5 rounded-2xl border shadow-sm">
-                      <div className="text-slate-500">صافي أرباح المركز التشغيلي</div>
-                      <div className="text-2xl font-black text-emerald-600 mt-1">{totalClinicNetProfit} ريال</div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
-                    <h3 className="font-black text-slate-900">إدارة نسب أطباء المركز والرواتب</h3>
-                    <div className="space-y-3">
-                      {doctorStats.map(doc => (
-                        <div key={doc.id} className="p-4 border rounded-xl bg-slate-50 flex justify-between items-center">
-                          <div>
-                            <div className="font-black text-slate-900">{doc.name} ({doc.specialtyName})</div>
-                            <div className="text-slate-500 mt-0.5">الراتب الأساسي: {doc.baseSalary} ريال | نسبة العّمولة: {doc.commissionRate}% | الإيراد المحقق: {doc.gross} ريال</div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {editingDocId === doc.id ? (
-                              <div className="flex items-center gap-1">
-                                <input type="number" value={tempRate} onChange={e => setTempRate(e.target.value)} className="w-16 p-1 border rounded text-center" />
-                                <button onClick={() => handleUpdateRate(doc.id)} className="px-2 py-1 bg-emerald-600 text-white rounded">حفظ</button>
-                              </div>
-                            ) : (
-                              <button onClick={() => { setEditingDocId(doc.id); setTempRate(String(doc.commissionRate)); }} className="px-3 py-1 bg-amber-50 text-amber-700 rounded font-bold hover:bg-amber-100">تعديل النسبة</button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {currentPath === '/appointments' && (
-                <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
-                  <h3 className="text-sm font-black text-slate-900">جدول المواعيد الشامل</h3>
-                  <div className="space-y-2">
-                    {appointments.map(a => (
-                      <div key={a.id} className="p-4 border rounded-xl bg-slate-50 flex justify-between items-center">
-                        <div>
-                          <div className="font-black text-slate-900">{a.patientName} - {a.serviceName}</div>
-                          <div className="text-slate-500 mt-0.5">الطبيب: {a.doctorName} | التاريخ: {a.date} ({a.time})</div>
-                        </div>
-                        <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-lg">{a.statusLabel}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {currentPath === '/patients' && user.role !== 'patient' && (
-                <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
-                  <h3 className="text-sm font-black text-slate-900">سجل المرضى الشامل (EMR Database)</h3>
-                  <div className="space-y-3">
-                    {patients.map(p => (
-                      <div key={p.id} className="p-4 border rounded-xl bg-slate-50 flex justify-between items-center">
-                        <div>
-                          <div className="font-black text-slate-900">{p.name} (هوية: {p.nationalId})</div>
-                          <div className="text-slate-500 mt-0.5">الهاتف: {p.phone} | الحساسية: {p.allergies} | فصيلة الدم: {p.bloodGroup}</div>
-                        </div>
-                        <button onClick={() => { setSelectedPatient(p); setCurrentPath('/dashboard/patient'); }} className="px-3 py-1.5 bg-emerald-600 text-white font-bold rounded-xl">استعراض الملف</button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
+              {/* 8. PRESCRIPTIONS REPOSITORY */}
               {currentPath === '/prescriptions' && (
-                <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
-                  <h3 className="text-sm font-black text-slate-900">أرشيف الروشتات الطبية الإلكترونية</h3>
-                  <div className="space-y-3">
-                    {prescriptions.map(r => (
-                      <div key={r.id} className="p-4 border rounded-xl bg-slate-50 space-y-2">
-                        <div className="flex justify-between font-bold">
-                          <span>{r.patientName} - {r.diagnosis}</span>
-                          <span className="text-emerald-600">{r.id}</span>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="text-lg font-black text-slate-900">أرشيف الروشتات والوصفات الطبية الإلكترونية</h2>
+                      <p className="text-xs text-slate-500">مركز {settings.name}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {prescriptions.map(rx => (
+                      <div key={rx.id} className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+                        <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+                          <div>
+                            <div className="font-black text-slate-900 text-sm">{rx.patientName}</div>
+                            <div className="text-xs text-brand-700 font-bold mt-0.5">التشخيص: {rx.diagnosis}</div>
+                            <div className="text-xs text-slate-500 mt-0.5">{rx.doctorName}</div>
+                          </div>
+                          <span className="font-mono text-xs font-bold text-slate-500">{rx.id}</span>
                         </div>
-                        <div className="text-slate-500">الطبيب: {r.doctorName} | التاريخ: {r.date}</div>
-                        <div className="pt-2 border-t space-y-1">
-                          {r.items.map((it, idx) => (
-                            <div key={idx} className="flex justify-between bg-white p-2 rounded border">
-                              <span className="font-bold text-slate-800">{it.drugName}</span>
-                              <span className="text-slate-600">{it.dosage} - {it.frequency}</span>
+
+                        <div className="space-y-1.5 text-xs">
+                          {rx.items.map((it, idx) => (
+                            <div key={idx} className="p-2.5 bg-slate-50 rounded-xl flex justify-between">
+                              <span className="font-bold text-slate-800">{it.drugName} - {it.dosage}</span>
+                              <span className="text-slate-600">{it.frequency}</span>
                             </div>
                           ))}
                         </div>
+
+                        <div className="pt-2 flex justify-end">
+                          <button
+                            onClick={() => { setSelectedRx(rx); setTimeout(() => window.print(), 150); }}
+                            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                          >
+                            <span>🖨️</span>
+                            <span>طباعة الوصفة الطبية</span>
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
+              {/* 9. INVOICES & ZATCA TAX PAGE */}
               {currentPath === '/invoices' && (
-                <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
-                  <h3 className="text-sm font-black text-slate-900">الفواتير الضريبية (ZATCA 15%)</h3>
-                  <div className="space-y-3">
-                    {invoices.map(inv => (
-                      <div key={inv.id} className="p-4 border rounded-xl bg-slate-50 flex justify-between items-center">
-                        <div>
-                          <div className="font-black text-slate-900">{inv.invoiceNumber} - {inv.patientName}</div>
-                          <div className="text-slate-500 mt-0.5">المبلغ قبل الضريبة: {inv.subtotal} | الضريبة (15%): {inv.vatAmount} ريال</div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="text-lg font-black text-slate-900">سجل الفواتير الضريبية المبسطة (15% ZATCA)</h2>
+                      <p className="text-xs font-mono text-slate-500">الرقم الضريبي: {settings.taxNumber}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {invoices.map(inv => {
+                      const zatcaB64 = generateZatcaTlvBase64(settings.name, settings.taxNumber, inv.date + 'T' + (inv.time || '18:00') + ':00Z', inv.totalWithVat, inv.vatAmount);
+                      const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" + encodeURIComponent(zatcaB64);
+
+                      return (
+                        <div key={inv.id} className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 flex flex-col justify-between">
+                          <div>
+                            <div className="flex justify-between items-start border-b border-slate-100 pb-2">
+                              <div>
+                                <div className="font-black text-slate-900 text-sm">{inv.patientName}</div>
+                                <div className="text-xs text-slate-500 font-mono mt-0.5">{inv.invoiceNumber}</div>
+                              </div>
+                              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full">{inv.paymentMethodLabel}</span>
+                            </div>
+
+                            <div className="py-2 space-y-1 text-xs">
+                              {inv.items.map((it, idx) => (
+                                <div key={idx} className="flex justify-between text-slate-600">
+                                  <span>{it.description}</span>
+                                  <span className="font-mono font-bold">{it.total} {settings.currency}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="pt-2 border-t border-slate-100 space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-slate-500">شامل ضريبة 15%:</span>
+                              <span className="text-base font-black text-brand-700 font-mono">{inv.totalWithVat} {settings.currency}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <img src={qrUrl} alt="ZATCA QR" className="w-12 h-12 rounded border" />
+                              <button
+                                onClick={() => { setSelectedInv(inv); setTimeout(() => window.print(), 150); }}
+                                className="px-3.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm"
+                              >
+                                طباعة الفاتورة 🖨️
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-left font-mono font-bold text-cyan-700">
-                          الإجمالي: {inv.totalWithVat} ريال
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
-              {currentPath === '/whatsapp-notifications' && user.role !== 'patient' && (
-                <div className="bg-white rounded-2xl p-6 border shadow-sm space-y-4 text-xs">
-                  <h3 className="text-sm font-black text-slate-900">نظام إشعارات الواتساب التلقائي (WAHA / API)</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-3">
+              {/* 10. WHATSAPP NOTIFICATIONS & WEBHOOK SIMULATOR */}
+              {currentPath === '/whatsapp-notifications' && (
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-lg font-black text-slate-900">نظام إشعارات الواتساب التلقائي (WAHA / Evolution API)</h2>
+                    <p className="text-xs text-slate-500">إرسال روابط المواعيد، الفواتير، والوصفات الطبية تلقائياً</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div className="lg:col-span-7 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 text-xs">
                       <div>
-                        <label className="block font-bold mb-1">اختر المريض:</label>
-                        <select value={waPatientId} onChange={e => setWaPatientId(e.target.value)} className="w-full p-2.5 border rounded-xl">
-                          {patients.map(p => <option key={p.id} value={p.id}>{p.name} ({p.phone})</option>)}
+                        <label className="block font-bold text-slate-700 mb-1">اختر المريض:</label>
+                        <select
+                          value={waPatientId}
+                          onChange={e => setWaPatientId(e.target.value)}
+                          className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                        >
+                          {patients.map(p => (
+                            <option key={p.id} value={p.id}>{p.name} ({p.phone})</option>
+                          ))}
                         </select>
                       </div>
+
                       <div>
-                        <label className="block font-bold mb-1">قالب الرسالة:</label>
-                        <select value={waTplId} onChange={e => setWaTplId(e.target.value)} className="w-full p-2.5 border rounded-xl">
-                          {WHATSAPP_TEMPLATES.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
-                        </select>
+                        <label className="block font-bold text-slate-700 mb-1">اختر قالب الرسالة الذكي:</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {WHATSAPP_TEMPLATES.map(t => (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => setWaTplId(t.id)}
+                              className={"p-2.5 rounded-xl border text-right font-bold transition " + (
+                                waTplId === t.id ? 'bg-brand-50 border-brand-500 text-brand-900' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                              )}
+                            >
+                              {t.title}
+                            </button>
+                          ))}
+                        </div>
                       </div>
+
                       <div>
-                        <label className="block font-bold mb-1">رقم الواتساب:</label>
-                        <input type="text" dir="ltr" value={waPhone} onChange={e => setWaPhone(e.target.value)} className="w-full p-2.5 border rounded-xl font-mono" />
+                        <label className="block font-bold text-slate-700 mb-1">رقم الواتساب المستهدف:</label>
+                        <input
+                          type="text"
+                          dir="ltr"
+                          value={waPhone}
+                          onChange={e => setWaPhone(e.target.value)}
+                          className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono"
+                        />
                       </div>
-                    </div>
-                    <div className="space-y-3 flex flex-col">
-                      <label className="block font-bold mb-1">معاينة نص الرسالة الجاهزة للإرسال:</label>
-                      <textarea value={waMessage} onChange={e => setWaMessage(e.target.value)} className="w-full flex-1 p-3 border rounded-xl font-mono text-[11px] bg-slate-50" rows="6"></textarea>
-                      <button onClick={() => alert('تم إرسال الرسالة بنجاح عبر بوابة الواتساب إلى الرقم: ' + waPhone)} className="w-full py-3 bg-emerald-600 text-white font-black rounded-xl shadow">
-                        إرسال الإشعار عبر الواتساب 💬
+
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">نص الرسالة المنشأ ديناميكياً:</label>
+                        <textarea
+                          rows="6"
+                          value={waMessage}
+                          onChange={e => setWaMessage(e.target.value)}
+                          className="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl font-sans text-xs leading-relaxed"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleSendWhatsAppWebhook}
+                        className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-2xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
+                      >
+                        <span>💬</span>
+                        <span>إرسال الإشعار عبر الواتساب وفتح المحادثة 🚀</span>
                       </button>
                     </div>
+
+                    {/* WhatsApp Preview Bubble */}
+                    <div className="lg:col-span-5 bg-slate-900 p-6 rounded-3xl text-white shadow-xl flex flex-col justify-between space-y-4">
+                      <div>
+                        <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold mb-4">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                          <span>معاينة الرسالة كما ستظهر للمريض (WhatsApp Bubble):</span>
+                        </div>
+                        
+                        <div className="bg-[#0b141a] p-4 rounded-2xl border border-slate-800">
+                          <div className="bg-[#005c4b] p-3.5 rounded-2xl rounded-tr-none text-xs text-white leading-relaxed whitespace-pre-wrap shadow-md">
+                            {waMessage}
+                          </div>
+                          <div className="text-[10px] text-slate-500 text-left mt-1 font-mono">18:30 ✓✓</div>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-800/80 p-3 rounded-2xl border border-slate-700 text-[11px] space-y-1">
+                        <div className="text-sky-300 font-bold">📡 إعدادات الربط الآلي (WAHA Endpoint):</div>
+                        <div className="text-slate-400 font-mono text-[10px] truncate">{settings.wahaUrl}</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
+
+              {/* 11. GLOBAL DYNAMIC SETTINGS & WHITE-LABELING (SAAS MODE) */}
+              {currentPath === '/settings' && user.role === 'owner' && (
+                <div className="space-y-6">
+                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-xl flex justify-between items-center"}>
+                    <div>
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-bold mb-2">
+                        <span>⚙️</span>
+                        <span>لوحة التحكم في إعدادات وهوية المركز (SaaS White-Labeling)</span>
+                      </span>
+                      <h2 className="text-2xl sm:text-3xl font-black">تخصيص الهوية، الضرائب، والثيم</h2>
+                      <p className="text-xs text-sky-200 mt-1">تنعكس التغييرات فورياً في الهيدر، الفواتير، الوصفات، وقوالب الواتساب</p>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleSaveSettings} className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-6 text-xs">
+                    
+                    {/* Section 1: Basic Clinic Identity */}
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-black text-slate-900 border-b pb-2 flex items-center gap-2">
+                        <span>🏥</span>
+                        <span>بيانات المنشأة وهوية المركز الأساسية</span>
+                      </h3>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">اسم المركز بالعربية (Clinic Name AR):</label>
+                          <input
+                            type="text"
+                            value={settingsForm.name}
+                            onChange={e => setSettingsForm({ ...settingsForm, name: e.target.value })}
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">اسم المركز بالإنجليزية (Clinic Name EN):</label>
+                          <input
+                            type="text"
+                            dir="ltr"
+                            value={settingsForm.nameEn}
+                            onChange={e => setSettingsForm({ ...settingsForm, nameEn: e.target.value })}
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">الفرع والعنوان (Branch / Location):</label>
+                          <input
+                            type="text"
+                            value={settingsForm.branch}
+                            onChange={e => setSettingsForm({ ...settingsForm, branch: e.target.value })}
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">رقم الهاتف والتواصل (Phone / WhatsApp):</label>
+                          <input
+                            type="text"
+                            dir="ltr"
+                            value={settingsForm.phone}
+                            onChange={e => setSettingsForm({ ...settingsForm, phone: e.target.value })}
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-slate-900"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 2: ZATCA & Taxes */}
+                    <div className="space-y-4 pt-4 border-t border-slate-100">
+                      <h3 className="text-sm font-black text-slate-900 border-b pb-2 flex items-center gap-2">
+                        <span>🧾</span>
+                        <span>إعدادات الفوترة الضريبية وهيئة الزكاة (ZATCA Compliance)</span>
+                      </h3>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">الرقم الضريبي للمنشأة (15 Digits VAT):</label>
+                          <input
+                            type="text"
+                            dir="ltr"
+                            value={settingsForm.taxNumber}
+                            onChange={e => setSettingsForm({ ...settingsForm, taxNumber: e.target.value })}
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">نسبة ضريبة القيمة المضافة (VAT %):</label>
+                          <input
+                            type="number"
+                            value={settingsForm.vatRate}
+                            onChange={e => setSettingsForm({ ...settingsForm, vatRate: Number(e.target.value) })}
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">رمز العملة (Currency):</label>
+                          <input
+                            type="text"
+                            value={settingsForm.currency}
+                            onChange={e => setSettingsForm({ ...settingsForm, currency: e.target.value })}
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 3: UI Theme Selector */}
+                    <div className="space-y-4 pt-4 border-t border-slate-100">
+                      <h3 className="text-sm font-black text-slate-900 border-b pb-2 flex items-center gap-2">
+                        <span>🎨</span>
+                        <span>مظهر وثيم النظام (UI Theme Mode)</span>
+                      </h3>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                        <label className={"p-4 rounded-2xl border-2 cursor-pointer flex flex-col justify-between transition " + (settingsForm.theme === 'blue' ? 'border-brand-600 bg-blue-50/50 shadow-sm' : 'border-slate-200 bg-white hover:bg-slate-50')}>
+                          <input
+                            type="radio"
+                            name="theme"
+                            value="blue"
+                            checked={settingsForm.theme === 'blue'}
+                            onChange={() => setSettingsForm({ ...settingsForm, theme: 'blue' })}
+                            className="hidden"
+                          />
+                          <div className="font-bold text-blue-900 text-xs flex items-center gap-2">
+                            <span className="w-4 h-4 rounded-full bg-blue-600"></span>
+                            <span>الأزرق الطبي (Clean Blue)</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-2">تصميم عصري ونقي بمدرجات الياقوت والسماء</p>
+                        </label>
+
+                        <label className={"p-4 rounded-2xl border-2 cursor-pointer flex flex-col justify-between transition " + (settingsForm.theme === 'emerald' ? 'border-emerald-600 bg-emerald-50/50 shadow-sm' : 'border-slate-200 bg-white hover:bg-slate-50')}>
+                          <input
+                            type="radio"
+                            name="theme"
+                            value="emerald"
+                            checked={settingsForm.theme === 'emerald'}
+                            onChange={() => setSettingsForm({ ...settingsForm, theme: 'emerald' })}
+                            className="hidden"
+                          />
+                          <div className="font-bold text-emerald-900 text-xs flex items-center gap-2">
+                            <span className="w-4 h-4 rounded-full bg-emerald-600"></span>
+                            <span>الزمردي والنعناع (Emerald)</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-2">ثيم العيادات الكلاسيكية والألوان الطبيعية</p>
+                        </label>
+
+                        <label className={"p-4 rounded-2xl border-2 cursor-pointer flex flex-col justify-between transition " + (settingsForm.theme === 'indigo' ? 'border-indigo-600 bg-indigo-50/50 shadow-sm' : 'border-slate-200 bg-white hover:bg-slate-50')}>
+                          <input
+                            type="radio"
+                            name="theme"
+                            value="indigo"
+                            checked={settingsForm.theme === 'indigo'}
+                            onChange={() => setSettingsForm({ ...settingsForm, theme: 'indigo' })}
+                            className="hidden"
+                          />
+                          <div className="font-bold text-indigo-900 text-xs flex items-center gap-2">
+                            <span className="w-4 h-4 rounded-full bg-indigo-600"></span>
+                            <span>الليلكي والياقوت (Indigo)</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-2">ثيم مراكز التجميل والجلدية الراقية</p>
+                        </label>
+
+                        <label className={"p-4 rounded-2xl border-2 cursor-pointer flex flex-col justify-between transition " + (settingsForm.theme === 'teal' ? 'border-teal-600 bg-teal-50/50 shadow-sm' : 'border-slate-200 bg-white hover:bg-slate-50')}>
+                          <input
+                            type="radio"
+                            name="theme"
+                            value="teal"
+                            checked={settingsForm.theme === 'teal'}
+                            onChange={() => setSettingsForm({ ...settingsForm, theme: 'teal' })}
+                            className="hidden"
+                          />
+                          <div className="font-bold text-teal-900 text-xs flex items-center gap-2">
+                            <span className="w-4 h-4 rounded-full bg-teal-600"></span>
+                            <span>التركواز السريري (Teal)</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-2">مزيج حيوي بين الأخضر والأزرق الطبي</p>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Submit Actions */}
+                    <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleResetSettings}
+                        className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition text-xs"
+                      >
+                        استعادة الإعدادات الافتراضية 🔄
+                      </button>
+
+                      <button
+                        type="submit"
+                        className="px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white font-black rounded-2xl shadow-lg shadow-brand-600/20 text-xs sm:text-sm transition"
+                      >
+                        حفظ وتطبيق إعدادات وهوية المركز فورياً 🚀
+                      </button>
+                    </div>
+
+                  </form>
+                </div>
+              )}
+
             </main>
           </div>
 
+          {/* Quick Appointment Modal */}
           {showSlotModal && (
-            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 text-xs shadow-2xl">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-black text-slate-900">حجز موعد جديد في المركز</h3>
-                  <button onClick={() => setShowSlotModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-base">✕</button>
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 text-xs shadow-2xl border border-slate-200 text-right animate-in fade-in">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h3 className="text-sm font-black text-slate-900">حجز موعد ({slotDate} - {slotTime})</h3>
+                  <button onClick={() => setShowSlotModal(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
                 </div>
                 <form onSubmit={handleSaveSlot} className="space-y-3">
                   <div>
-                    <label className="block font-bold mb-1">المريض:</label>
-                    <select value={slotPatientId} onChange={e => setSlotPatientId(e.target.value)} className="w-full p-2.5 border rounded-xl font-bold">
-                      {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    <label className="block font-bold text-slate-700 mb-1">المريض:</label>
+                    <select
+                      value={slotPatientId}
+                      onChange={e => setSlotPatientId(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                    >
+                      {patients.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} ({p.phone})</option>
+                      ))}
                     </select>
                   </div>
+
                   <div>
-                    <label className="block font-bold mb-1">التخصص والعيادة:</label>
-                    <select value={slotSpecialty} onChange={e => {
-                      const sp = e.target.value;
-                      setSlotSpecialty(sp);
-                      if (sp === 'dental') { setSlotDoctor('د. فهد العنزي'); setSlotService('كشف استشاري وخطة علاج أسنان'); }
-                      else { setSlotDoctor('د. سلمى الشمري'); setSlotService('جلسة كشف وعناية جلدية'); }
-                    }} className="w-full p-2.5 border rounded-xl font-bold">
-                      <option value="dental">طب الأسنان</option>
-                      <option value="dermatology">الجلدية والتجميل</option>
-                    </select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block font-bold mb-1">التاريخ:</label>
-                      <input type="date" value={slotDate} onChange={e => setSlotDate(e.target.value)} className="w-full p-2.5 border rounded-xl font-mono" />
-                    </div>
-                    <div>
-                      <label className="block font-bold mb-1">الوقت:</label>
-                      <select value={slotTime} onChange={e => setSlotTime(e.target.value)} className="w-full p-2.5 border rounded-xl font-mono font-bold">
-                        {timeSlots.map(ts => <option key={ts} value={ts}>{ts}</option>)}
-                      </select>
+                    <label className="block font-bold text-slate-700 mb-1">التخصص والعيادة:</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { setSlotSpecialty('dental'); setSlotDoctor('د. فهد العنزي'); setSlotService('كشف استشاري وخطة علاج أسنان'); setSlotPrice(150); }}
+                        className={"p-2.5 rounded-xl border font-bold transition " + (slotSpecialty === 'dental' ? 'bg-brand-600 text-white' : 'bg-slate-50')}
+                      >
+                        🦷 عيادة الأسنان
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setSlotSpecialty('dermatology'); setSlotDoctor('د. سلمى الشمري'); setSlotService('جلسة كشف واستشارة جلدية'); setSlotPrice(200); }}
+                        className={"p-2.5 rounded-xl border font-bold transition " + (slotSpecialty === 'dermatology' ? 'bg-teal-600 text-white' : 'bg-slate-50')}
+                      >
+                        ✨ الجلدية والتجميل
+                      </button>
                     </div>
                   </div>
-                  <button type="submit" className="w-full py-3 bg-emerald-600 text-white font-black rounded-xl shadow-lg mt-2">
-                    تأكيد حجز الموعد
-                  </button>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">الطبيب المعالج:</label>
+                    <input type="text" readOnly value={slotDoctor} className="w-full p-2.5 bg-slate-100 border border-slate-200 rounded-xl font-bold" />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">الخدمة الطبية المقررة:</label>
+                    <input
+                      type="text"
+                      value={slotService}
+                      onChange={e => setSlotService(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button type="button" onClick={() => setShowSlotModal(false)} className="px-4 py-2 border rounded-xl font-bold">إلغاء</button>
+                    <button type="submit" className="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-black shadow-md">
+                      تأكيد الحجز والإدراج بالانتظار 🚀
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>
           )}
+
+          {/* Dermatology Session Modal */}
+          {showDermaModal && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 text-xs shadow-2xl border border-slate-200 text-right animate-in fade-in">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h3 className="text-sm font-black text-teal-900">تسجيل جلسة جلدية / ليزر للمريض: {selectedPatient.name}</h3>
+                  <button onClick={() => setShowDermaModal(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                </div>
+                <form onSubmit={handleAddDermaSession} className="space-y-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">الجهاز المستخدم:</label>
+                    <select
+                      value={dermaDevice}
+                      onChange={e => setDermaDevice(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                    >
+                      <option value="Candela GentleMax Pro (Alexandrite 755nm)">Candela GentleMax Pro (Alexandrite 755nm)</option>
+                      <option value="Candela GentleMax Pro (Nd:YAG 1064nm)">Candela GentleMax Pro (Nd:YAG 1064nm)</option>
+                      <option value="Cynosure Elite+ Laser">Cynosure Elite+ Laser</option>
+                      <option value="Profhilo BAP Skin Booster">Profhilo BAP Skin Booster</option>
+                      <option value="Botox Allergan Cosmetic">Botox Allergan Cosmetic</option>
+                      <option value="Juvederm Ultra Filler">Juvederm Ultra Filler</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">اسم الجلسة / الإجراء:</label>
+                    <input
+                      type="text"
+                      value={dermaTreatment}
+                      onChange={e => setDermaTreatment(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">الطاقة (Fluence):</label>
+                      <input
+                        type="text"
+                        value={dermaFluence}
+                        onChange={e => setDermaFluence(e.target.value)}
+                        className="w-full p-2 bg-slate-50 border rounded-xl font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">عرض النبضة:</label>
+                      <input
+                        type="text"
+                        value={dermaPulse}
+                        onChange={e => setDermaPulse(e.target.value)}
+                        className="w-full p-2 bg-slate-50 border rounded-xl font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">حجم البقعة:</label>
+                      <input
+                        type="text"
+                        value={dermaSpot}
+                        onChange={e => setDermaSpot(e.target.value)}
+                        className="w-full p-2 bg-slate-50 border rounded-xl font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">المناطق المعالجة:</label>
+                    <input
+                      type="text"
+                      value={dermaAreas}
+                      onChange={e => setDermaAreas(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border rounded-xl font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">ملاحظات الطبيب:</label>
+                    <input
+                      type="text"
+                      value={dermaNotes}
+                      onChange={e => setDermaNotes(e.target.value)}
+                      placeholder="توصيات العناية واستجابة الجلد..."
+                      className="w-full p-2.5 bg-slate-50 border rounded-xl font-medium"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button type="button" onClick={() => setShowDermaModal(false)} className="px-4 py-2 border rounded-xl font-bold">إلغاء</button>
+                    <button type="submit" className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-black shadow-md">
+                      حفظ الجلسة في ملف المريض 💾
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Printable Prescription Template (Visible during window.print()) */}
+          <div className="hidden print-area p-8 bg-white text-black" dir="rtl">
+            {selectedRx && (
+              <div className="space-y-6 max-w-2xl mx-auto border-2 border-slate-900 p-8 rounded-2xl">
+                {/* Header */}
+                <div className="flex justify-between items-center border-b-2 border-slate-900 pb-4">
+                  <div>
+                    <h1 className="text-xl font-black">{settings.name}</h1>
+                    <p className="text-xs text-slate-600">{settings.nameEn}</p>
+                    <p className="text-xs text-slate-500">{settings.branch} • هاتف: {settings.phone}</p>
+                  </div>
+                  <div className="text-left">
+                    <div className="text-lg font-black text-slate-900">وصفة طبية إلكترونية</div>
+                    <div className="font-mono text-xs font-bold">{selectedRx.id}</div>
+                    <div className="text-xs text-slate-500">{selectedRx.date}</div>
+                  </div>
+                </div>
+
+                {/* Patient & Doctor Details */}
+                <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl text-xs border">
+                  <div>
+                    <div><strong>اسم المريض:</strong> {selectedRx.patientName}</div>
+                    <div><strong>رقم الهوية:</strong> {selectedRx.nationalId || '10XXXXXXXX'}</div>
+                  </div>
+                  <div>
+                    <div><strong>الطبيب المعالج:</strong> {selectedRx.doctorName}</div>
+                    <div><strong>التخصص / الترخيص:</strong> {selectedRx.doctorTitle}</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-xs font-bold mb-1"><strong>التشخيص السريري:</strong> {selectedRx.diagnosis}</div>
+                </div>
+
+                {/* Medications Table */}
+                <div className="space-y-2">
+                  <div className="font-serif text-2xl font-black">℞</div>
+                  <table className="w-full text-right text-xs border-collapse border border-slate-300">
+                    <thead>
+                      <tr className="bg-slate-100 border-b">
+                        <th className="p-2 border">#</th>
+                        <th className="p-2 border">اسم الدواء والعيار</th>
+                        <th className="p-2 border">الجرعة والتكرار</th>
+                        <th className="p-2 border">المدة</th>
+                        <th className="p-2 border">التعليمات</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedRx.items.map((it, idx) => (
+                        <tr key={idx} className="border-b">
+                          <td className="p-2 border font-bold">{idx + 1}</td>
+                          <td className="p-2 border font-bold">{it.drugName} ({it.dosage})</td>
+                          <td className="p-2 border">{it.frequency}</td>
+                          <td className="p-2 border">{it.duration}</td>
+                          <td className="p-2 border">{it.instructions}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Signature */}
+                <div className="pt-8 flex justify-between items-end text-xs">
+                  <div className="text-slate-400 text-[10px]">صدرت هذه الوصفة إلكترونياً ولا تتطلب ختماً ورقياً.</div>
+                  <div className="text-center">
+                    <div className="font-bold">{selectedRx.doctorName}</div>
+                    <div className="text-[10px] text-slate-500">توقيع وختم الطبيب المعتمد</div>
+                    <div className="w-32 border-b-2 border-slate-900 mt-6 mx-auto"></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
         </div>
       );
     }
 
-    ReactDOM.render(<App />, document.getElementById('root'));
+    // Render React Root
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
 </body>
 </html>
