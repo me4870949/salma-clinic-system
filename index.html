@@ -129,6 +129,7 @@
       branch: "فرع عرعر - طريق الملك عبدالعزيز",
       phone: "+966 14 662 8899",
       taxNumber: "310489201900003",
+      crNumber: "1010456789",
       vatRate: 15,
       currency: "ر.س",
       theme: "blue", // 'blue', 'emerald', 'indigo', 'teal'
@@ -494,7 +495,8 @@
       // --- 4. Core Clinical & Operational Data States ---
       const [patients, setPatients] = useState(() => {
         const saved = localStorage.getItem('salma_patients_v2');
-        return saved ? JSON.parse(saved) : INITIAL_PATIENTS;
+        const base = saved ? JSON.parse(saved) : INITIAL_PATIENTS;
+        return base.map(p => ({ ...p, fileNumber: p.fileNumber || p.id.replace('PAT-', 'MED-2026-') }));
       });
 
       const [appointments, setAppointments] = useState(() => {
@@ -584,6 +586,23 @@
 
       // Settings Form Local State
       const [settingsForm, setSettingsForm] = useState(settings);
+
+      // Patient Self-Service Appointment Booking State
+      const [bookingDept, setBookingDept] = useState('dental');
+      const [bookingDoctor, setBookingDoctor] = useState('د. سلمى العنزي');
+      const [bookingService, setBookingService] = useState('');
+      const [bookingDate, setBookingDate] = useState('2026-09-06');
+      const [bookingTime, setBookingTime] = useState('09:00 AM');
+      const [bookingNotes, setBookingNotes] = useState('');
+
+      // Appointments & Patients Directory Filters
+      const [apptFilter, setApptFilter] = useState('all');
+      const [patientSearchQuery, setPatientSearchQuery] = useState('');
+      const [showPatientDetailModal, setShowPatientDetailModal] = useState(false);
+
+      // WhatsApp Quick-Compose Simulator State
+      const [whatsappSimulateText, setWhatsappSimulateText] = useState('');
+      const [whatsappLogs, setWhatsappLogs] = useState([]);
 
       // --- Sync localStorage ---
       useEffect(() => {
@@ -956,39 +975,107 @@
         }
       };
 
-      const handleUpdateDoctorCommission = (docId) => {
-        setDoctors(doctors.map(d => d.id === docId ? { ...d, commissionRate: Number(tempRate) } : d));
-        setEditingDocId(null);
-        alert('تم تحديث نسبة عمولة الطبيب بنجاح.');
+      const handleUpdateDoctorCommission = (docId, newRate) => {
+        setDoctors(doctors.map(d => d.id === docId ? { ...d, commissionRate: newRate } : d));
+      };
+
+      // --- Smart Archive: Preview & Print Helpers ---
+      const handleOpenPreviewModal = (item) => {
+        setPreviewItem(item);
+        setShowPreviewModal(true);
+      };
+
+      const handleOpenInboundModal = (category) => {
+        setUploadCategory(category);
+        setShowUploadModal(true);
+      };
+
+      const handlePrintRx = (rx) => {
+        setSelectedRx(rx);
+        window.print();
+      };
+
+      const handlePrintInvoice = (inv) => {
+        setSelectedInv(inv);
+        window.print();
+      };
+
+      // --- Appointments: Update Status (confirm / complete / cancel) ---
+      const handleUpdateApptStatus = (id, status) => {
+        const labels = {
+          confirmed: 'مؤكد في الانتظار',
+          pending: 'بانتظار التأكيد',
+          cancelled: 'ملغي',
+          'in-progress': 'في العيادة'
+        };
+        setAppointments(appointments.map(a => a.id === id ? { ...a, status, statusLabel: labels[status] || a.statusLabel } : a));
+      };
+
+      // --- Dental Odontogram: Select Tooth for Editing ---
+      const handleToothClick = (toothNumber) => {
+        setSelectedTooth(toothNumber);
+      };
+
+      // --- Patient Self-Service / Quick Staff Appointment Booking ---
+      const handlePatientBookingSubmit = (e) => {
+        e.preventDefault();
+        const targetPatient = (user && user.role === 'patient') ? (currentPatientObj || user) : (selectedPatient || patients[0]);
+        const newAppt = {
+          id: "APT-2026-" + String(appointments.length + 1).padStart(3, '0'),
+          patientId: targetPatient.id,
+          patientName: targetPatient.name,
+          phone: targetPatient.phone,
+          doctorId: bookingDept === 'dental' ? 'u-doc-2' : 'u-doc-1',
+          doctorName: bookingDoctor,
+          specialty: bookingDept === 'dental' ? 'dental' : 'dermatology',
+          serviceName: bookingService || 'كشف استشاري',
+          date: bookingDate,
+          time: bookingTime,
+          status: 'pending',
+          statusLabel: 'بانتظار التأكيد',
+          notes: bookingNotes,
+          price: 0
+        };
+        setAppointments([newAppt, ...appointments]);
+        setBookingService('');
+        setBookingNotes('');
+        setShowSlotModal(false);
+        alert('تم إرسال طلب الحجز بنجاح! سيتم تأكيد الموعد وإرسال إشعار WhatsApp قريباً.');
       };
 
       // --- WhatsApp Webhook & API Sender ---
-      const handleSendWhatsAppWebhook = async () => {
-        const cleanPhone = waPhone.replace(/[^0-9]/g, '');
+      const handleSendWhatsAppWebhook = async (apt) => {
+        const phone = apt ? apt.phone : waPhone;
+        const text = apt
+          ? ('تذكير بموعدكم في ' + settings.name + '\nالتاريخ: ' + apt.date + ' | الوقت: ' + apt.time + '\nالطبيب: ' + apt.doctorName + '\nالخدمة: ' + apt.serviceName)
+          : waMessage;
+        const cleanPhone = phone.replace(/[^0-9]/g, '');
         const formattedPhone = cleanPhone.startsWith('05') ? '966' + cleanPhone.substring(1) : cleanPhone.startsWith('5') ? '966' + cleanPhone : cleanPhone;
 
         const payload = {
           chatId: formattedPhone + "@c.us",
-          text: waMessage,
+          text: text,
           session: "default",
           metadata: {
             clinic: settings.name,
-            patientId: waPatientId,
+            patientId: apt ? apt.patientId : waPatientId,
             timestamp: new Date().toISOString()
           }
         };
 
         const newLog = {
           id: 'WA-' + Date.now(),
+          patientName: apt ? apt.patientName : ((patients.find(p => p.id === waPatientId) || {}).name || ''),
           time: new Date().toLocaleTimeString('ar-SA'),
           phone: formattedPhone,
+          text: text,
           status: 'sent',
           payload
         };
 
         setWaStatusLog([newLog, ...waStatusLog]);
 
-        const waUrl = "https://wa.me/" + formattedPhone + "?text=" + encodeURIComponent(waMessage);
+        const waUrl = "https://wa.me/" + formattedPhone + "?text=" + encodeURIComponent(text);
         window.open(waUrl, '_blank');
       };
 
@@ -1024,6 +1111,79 @@
 
       const totalDoctorComms = doctorStats.reduce((s, d) => s + d.commAmt, 0);
       const totalClinicNetProfit = Math.max(0, totalClinicGross - totalDoctorComms);
+
+      // --- Finance Dashboard Aliases ---
+      const totalRevenue = totalClinicWithVat;
+      const totalTax = totalClinicVat;
+      const totalDoctorCommissions = totalDoctorComms;
+      const netCenterProfit = totalClinicNetProfit;
+
+      // --- Current Logged-in Patient's Own Records (Patient Portal) ---
+      const currentPatientObj = useMemo(() => {
+        if (!user) return selectedPatient;
+        return patients.find(p => p.id === user.id) || selectedPatient;
+      }, [patients, user, selectedPatient]);
+
+      const currentPatientAppts = useMemo(() => {
+        if (!currentPatientObj) return [];
+        return appointments.filter(a => a.patientId === currentPatientObj.id);
+      }, [appointments, currentPatientObj]);
+
+      const currentPatientRx = useMemo(() => {
+        if (!currentPatientObj) return [];
+        return prescriptions.filter(r => r.patientId === currentPatientObj.id);
+      }, [prescriptions, currentPatientObj]);
+
+      const currentPatientInvoices = useMemo(() => {
+        if (!currentPatientObj) return [];
+        return invoices.filter(i => i.patientId === currentPatientObj.id);
+      }, [invoices, currentPatientObj]);
+
+      // --- Smart Inbound Archive Counters ---
+      const pendingLabsCount = useMemo(() => {
+        return patients.reduce((count, p) => {
+          const labs = (p.labResults || []).filter(r => !r.reviewed).length;
+          const rads = (p.radiologyRecords || []).filter(r => !r.reviewed).length;
+          return count + labs + rads;
+        }, 0);
+      }, [patients]);
+
+      const criticalAlertsCount = useMemo(() => {
+        return patients.reduce((count, p) => {
+          const labs = (p.labResults || []).filter(r => r.status === 'critical').length;
+          const rads = (p.radiologyRecords || []).filter(r => r.status === 'critical').length;
+          return count + labs + rads;
+        }, 0);
+      }, [patients]);
+
+      // --- Dental Odontogram Map (Tooth Number -> Condition) for Selected Patient ---
+      const dentalTeeth = useMemo(() => {
+        const map = {};
+        (selectedPatient?.dentalRecords || []).forEach(r => {
+          map[r.toothNumber] = r.condition;
+        });
+        return map;
+      }, [selectedPatient]);
+
+      // --- Appointments Directory Filter ---
+      const filteredAppointments = useMemo(() => {
+        if (apptFilter === 'dental') return appointments.filter(a => a.specialty === 'dental');
+        if (apptFilter === 'derma') return appointments.filter(a => a.specialty === 'dermatology');
+        if (apptFilter === 'today') return appointments.filter(a => a.date === '2026-09-05');
+        return appointments;
+      }, [appointments, apptFilter]);
+
+      // --- Patients Directory Search ---
+      const filteredPatients = useMemo(() => {
+        const q = patientSearchQuery.trim().toLowerCase();
+        if (!q) return patients;
+        return patients.filter(p =>
+          p.name.toLowerCase().includes(q) ||
+          (p.fileNumber || '').toLowerCase().includes(q) ||
+          (p.nationalId || '').includes(q) ||
+          (p.phone || '').includes(q)
+        );
+      }, [patients, patientSearchQuery]);
 
       const timeSlots = ['09:00', '10:00', '11:00', '12:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'];
       const weekDays = [
@@ -1433,9 +1593,9 @@
                             👤
                           </span>
                           <div>
-                            <h2 className="text-2xl font-black">{currentUser?.name || 'المريض'}</h2>
+                            <h2 className="text-2xl font-black">{user?.name || 'المريض'}</h2>
                             <p className="text-brand-100 text-xs mt-0.5">
-                              رقم الملف الطبي: <span className="font-mono font-bold">{currentPatientObj?.fileNumber || 'MED-2026-001'}</span> | الهوية الوطنية: <span className="font-mono">{currentPatientObj?.nationalId || currentUser?.nationalId || '1098765432'}</span>
+                              رقم الملف الطبي: <span className="font-mono font-bold">{currentPatientObj?.fileNumber || 'MED-2026-001'}</span> | الهوية الوطنية: <span className="font-mono">{currentPatientObj?.nationalId || user?.nationalId || '1098765432'}</span>
                             </p>
                           </div>
                         </div>
@@ -1538,9 +1698,9 @@
                                   )}>
                                     {apt.status === 'confirmed' ? 'مؤكد' : apt.status === 'pending' ? 'قيد الانتظار' : apt.status === 'cancelled' ? 'ملغي' : 'مكتمل'}
                                   </span>
-                                  <span className="text-xs font-bold text-slate-500">{apt.department}</span>
+                                  <span className="text-xs font-bold text-slate-500">{apt.specialty}</span>
                                 </div>
-                                <h4 className="font-bold text-slate-800 text-sm">{apt.service}</h4>
+                                <h4 className="font-bold text-slate-800 text-sm">{apt.serviceName}</h4>
                                 <p className="text-xs text-slate-600 flex items-center gap-2">
                                   <span>👨‍⚕️</span>
                                   <span>الطبيب المعالج: {apt.doctorName}</span>
@@ -1863,7 +2023,7 @@
                                     <span className="text-xs font-mono text-slate-400">{rx.date}</span>
                                   </div>
                                   <h4 className="text-sm font-bold text-slate-800 mt-1">التشخيص: {rx.diagnosis}</h4>
-                                  <p className="text-xs text-slate-500">الطبيب المحرر: {rx.doctorName} ({rx.department})</p>
+                                  <p className="text-xs text-slate-500">الطبيب المحرر: {rx.doctorName} ({rx.doctorTitle})</p>
                                 </div>
                                 <button
                                   onClick={() => handlePrintRx(rx)}
@@ -2083,11 +2243,11 @@
                   <div className="bg-gradient-to-l from-brand-800 via-brand-700 to-teal-800 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                       <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-white/20 backdrop-blur-md">
-                        {currentUser?.department === 'dental' ? 'عيادات طب وجراحة الأسنان' : 'عيادات الجلدية والليزر'}
+                        {user?.specialty === 'dental' ? 'عيادات طب وجراحة الأسنان' : 'عيادات الجلدية والليزر'}
                       </span>
-                      <h2 className="text-2xl font-black mt-2">مرحباً {currentUser?.name} 👋</h2>
+                      <h2 className="text-2xl font-black mt-2">مرحباً {user?.name} 👋</h2>
                       <p className="text-brand-100 text-xs mt-1">
-                        لديك اليوم <strong className="text-white font-mono">{appointments.filter(a => a.doctorName.includes(currentUser?.name?.split(' ')[1] || 'سلمى')).length}</strong> مواعيد مجدولة و <strong className="text-white font-mono">{pendingLabsCount}</strong> فحوصات مخبرية وأشعة بحاجة مراجعة
+                        لديك اليوم <strong className="text-white font-mono">{appointments.filter(a => a.doctorName.includes(user?.name?.split(' ')[1] || 'سلمى')).length}</strong> مواعيد مجدولة و <strong className="text-white font-mono">{pendingLabsCount}</strong> فحوصات مخبرية وأشعة بحاجة مراجعة
                       </p>
                     </div>
 
@@ -2263,12 +2423,12 @@
                         {Object.entries(TOOTH_CONDITIONS).map(([key, cond]) => (
                           <button
                             key={key}
-                            onClick={() => setSelectedCondition(key)}
+                            onClick={() => setToothCondition(key)}
                             className={"px-2.5 py-1 rounded-lg text-[11px] font-bold transition " + (
-                              selectedCondition === key ? cond.color + ' ring-2 ring-slate-800 shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                              toothCondition === key ? cond.color + ' ring-2 ring-slate-800 shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                             )}
                           >
-                            {cond.name}
+                            {cond.label}
                           </button>
                         ))}
                       </div>
@@ -2282,19 +2442,19 @@
                         <div className="grid grid-cols-2 gap-4">
                           {/* Quad 1 (UR) */}
                           <div className="flex flex-wrap justify-end gap-1.5 bg-white p-3 rounded-xl border border-slate-200">
-                            <span className="w-full text-right text-[10px] font-bold text-slate-400 mb-1">{QUADRANTS.q1.name}</span>
-                            {QUADRANTS.q1.teeth.map(t => {
-                              const condKey = dentalTeeth[t] || 'healthy';
+                            <span className="w-full text-right text-[10px] font-bold text-slate-400 mb-1">{QUADRANTS[0].name}</span>
+                            {QUADRANTS[0].teeth.map(t => {
+                              const condKey = dentalTeeth[t] || 'sound';
                               const cond = TOOTH_CONDITIONS[condKey];
                               return (
                                 <button
                                   key={t}
                                   onClick={() => handleToothClick(t)}
                                   className={"w-9 h-11 rounded-lg flex flex-col items-center justify-center font-mono font-bold text-xs transition border shadow-xs " + cond.color}
-                                  title={"سن رقم " + t + " : " + cond.name}
+                                  title={"سن رقم " + t + " : " + cond.label}
                                 >
                                   <span>{t}</span>
-                                  <span className="text-[8px] opacity-75">{cond.name.slice(0, 3)}</span>
+                                  <span className="text-[8px] opacity-75">{cond.label.slice(0, 3)}</span>
                                 </button>
                               );
                             })}
@@ -2302,19 +2462,19 @@
 
                           {/* Quad 2 (UL) */}
                           <div className="flex flex-wrap justify-start gap-1.5 bg-white p-3 rounded-xl border border-slate-200">
-                            <span className="w-full text-left text-[10px] font-bold text-slate-400 mb-1">{QUADRANTS.q2.name}</span>
-                            {QUADRANTS.q2.teeth.map(t => {
-                              const condKey = dentalTeeth[t] || 'healthy';
+                            <span className="w-full text-left text-[10px] font-bold text-slate-400 mb-1">{QUADRANTS[1].name}</span>
+                            {QUADRANTS[1].teeth.map(t => {
+                              const condKey = dentalTeeth[t] || 'sound';
                               const cond = TOOTH_CONDITIONS[condKey];
                               return (
                                 <button
                                   key={t}
                                   onClick={() => handleToothClick(t)}
                                   className={"w-9 h-11 rounded-lg flex flex-col items-center justify-center font-mono font-bold text-xs transition border shadow-xs " + cond.color}
-                                  title={"سن رقم " + t + " : " + cond.name}
+                                  title={"سن رقم " + t + " : " + cond.label}
                                 >
                                   <span>{t}</span>
-                                  <span className="text-[8px] opacity-75">{cond.name.slice(0, 3)}</span>
+                                  <span className="text-[8px] opacity-75">{cond.label.slice(0, 3)}</span>
                                 </button>
                               );
                             })}
@@ -2327,19 +2487,19 @@
                         <div className="grid grid-cols-2 gap-4">
                           {/* Quad 4 (LR) */}
                           <div className="flex flex-wrap justify-end gap-1.5 bg-white p-3 rounded-xl border border-slate-200">
-                            <span className="w-full text-right text-[10px] font-bold text-slate-400 mb-1">{QUADRANTS.q4.name}</span>
-                            {QUADRANTS.q4.teeth.map(t => {
-                              const condKey = dentalTeeth[t] || 'healthy';
+                            <span className="w-full text-right text-[10px] font-bold text-slate-400 mb-1">{QUADRANTS[2].name}</span>
+                            {QUADRANTS[2].teeth.map(t => {
+                              const condKey = dentalTeeth[t] || 'sound';
                               const cond = TOOTH_CONDITIONS[condKey];
                               return (
                                 <button
                                   key={t}
                                   onClick={() => handleToothClick(t)}
                                   className={"w-9 h-11 rounded-lg flex flex-col items-center justify-center font-mono font-bold text-xs transition border shadow-xs " + cond.color}
-                                  title={"سن رقم " + t + " : " + cond.name}
+                                  title={"سن رقم " + t + " : " + cond.label}
                                 >
                                   <span>{t}</span>
-                                  <span className="text-[8px] opacity-75">{cond.name.slice(0, 3)}</span>
+                                  <span className="text-[8px] opacity-75">{cond.label.slice(0, 3)}</span>
                                 </button>
                               );
                             })}
@@ -2347,19 +2507,19 @@
 
                           {/* Quad 3 (LL) */}
                           <div className="flex flex-wrap justify-start gap-1.5 bg-white p-3 rounded-xl border border-slate-200">
-                            <span className="w-full text-left text-[10px] font-bold text-slate-400 mb-1">{QUADRANTS.q3.name}</span>
-                            {QUADRANTS.q3.teeth.map(t => {
-                              const condKey = dentalTeeth[t] || 'healthy';
+                            <span className="w-full text-left text-[10px] font-bold text-slate-400 mb-1">{QUADRANTS[3].name}</span>
+                            {QUADRANTS[3].teeth.map(t => {
+                              const condKey = dentalTeeth[t] || 'sound';
                               const cond = TOOTH_CONDITIONS[condKey];
                               return (
                                 <button
                                   key={t}
                                   onClick={() => handleToothClick(t)}
                                   className={"w-9 h-11 rounded-lg flex flex-col items-center justify-center font-mono font-bold text-xs transition border shadow-xs " + cond.color}
-                                  title={"سن رقم " + t + " : " + cond.name}
+                                  title={"سن رقم " + t + " : " + cond.label}
                                 >
                                   <span>{t}</span>
-                                  <span className="text-[8px] opacity-75">{cond.name.slice(0, 3)}</span>
+                                  <span className="text-[8px] opacity-75">{cond.label.slice(0, 3)}</span>
                                 </button>
                               );
                             })}
@@ -2515,8 +2675,8 @@
                               <td className="p-3 font-mono font-bold text-brand-700">{apt.id}</td>
                               <td className="p-3 font-bold text-slate-800">{apt.patientName}</td>
                               <td className="p-3">
-                                <span className="block font-medium text-slate-700">{apt.service}</span>
-                                <span className="text-[10px] text-slate-400">{apt.department}</span>
+                                <span className="block font-medium text-slate-700">{apt.serviceName}</span>
+                                <span className="text-[10px] text-slate-400">{apt.specialty}</span>
                               </td>
                               <td className="p-3 font-medium text-slate-700">{apt.doctorName}</td>
                               <td className="p-3 font-mono text-slate-600">{apt.time}</td>
@@ -2788,10 +2948,10 @@
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                          {doctorsList.map(doc => {
-                            const genRevenue = doc.id === 'u2' ? 3850 : 2750;
-                            const commAmount = (genRevenue * (doc.commissionRate || 35)) / 100;
-                            const totalPayout = (doc.baseSalary || 15000) + commAmount;
+                          {doctorStats.map(doc => {
+                            const genRevenue = doc.gross || 0;
+                            const commAmount = doc.commAmt || 0;
+                            const totalPayout = doc.payout || ((doc.baseSalary || 15000) + commAmount);
                             return (
                               <tr key={doc.id} className="hover:bg-slate-50/70 transition">
                                 <td className="p-3">
@@ -2800,7 +2960,7 @@
                                 </td>
                                 <td className="p-3">
                                   <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-brand-50 text-brand-700">
-                                    {doc.department === 'dental' ? 'طب وجراحة الأسنان' : 'الجلدية والليزر'}
+                                    {doc.specialty === 'dental' ? 'طب وجراحة الأسنان' : 'الجلدية والليزر'}
                                   </span>
                                 </td>
                                 <td className="p-3 font-mono font-bold text-slate-700">
@@ -2900,7 +3060,7 @@
 
                     <div className="flex flex-wrap items-center gap-2">
                       <button
-                        onClick={() => setShowQuickSlotModal(true)}
+                        onClick={() => setShowSlotModal(true)}
                         className="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow transition flex items-center gap-2"
                       >
                         <span>+</span>
@@ -2963,7 +3123,7 @@
                           <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-1.5 text-xs">
                             <div className="flex justify-between">
                               <span className="text-slate-500">الخدمة:</span>
-                              <span className="font-bold text-slate-800">{apt.service}</span>
+                              <span className="font-bold text-slate-800">{apt.serviceName}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-slate-500">الطبيب:</span>
@@ -3262,14 +3422,9 @@
                               type="button"
                               onClick={() => {
                                 const p = selectedPatient || patients[0];
-                                setWhatsappSimulateText(WHATSAPP_TEMPLATES.bookingConfirmation({
-                                  patientName: p.name,
-                                  clinicName: settings.name,
-                                  doctorName: 'د. سلمى العنزي',
-                                  date: '2026-09-05',
-                                  time: '04:30 PM',
-                                  fileNumber: p.fileNumber
-                                }));
+                                setWhatsappSimulateText(
+                                  "أهلاً بك " + p.name + " 🌸\nنؤكد حجز موعدك في *" + settings.name + "*.\n📅 التاريخ: 2026-09-05\n⏰ الوقت: 04:30 PM\n👨‍⚕️ العيادة: د. سلمى العنزي\n📞 هاتف المركز: " + settings.phone + "\nنتطلع لخدمتكم بأعلى معايير الرعاية ✨"
+                                );
                               }}
                               className="p-3 rounded-xl border border-slate-200 hover:border-emerald-500 bg-slate-50 text-right text-xs transition"
                             >
@@ -3281,12 +3436,9 @@
                               type="button"
                               onClick={() => {
                                 const p = selectedPatient || patients[0];
-                                setWhatsappSimulateText(WHATSAPP_TEMPLATES.labResultReady({
-                                  patientName: p.name,
-                                  clinicName: settings.name,
-                                  testName: 'فحص صورة الدم الشاملة CBC',
-                                  fileNumber: p.fileNumber
-                                }));
+                                setWhatsappSimulateText(
+                                  "مرحباً " + p.name + " 🔬\nنحيطكم علماً بصدور واعتماد نتائج فحص صورة الدم الشاملة CBC في ملفكم الطبي (" + p.fileNumber + ") بمركز *" + settings.name + "*.\n🔗 يمكنكم الاطلاع المباشر على التقرير من بوابة المريض.\nدمتم بأتم الصحة والعافية 🌸"
+                                );
                               }}
                               className="p-3 rounded-xl border border-slate-200 hover:border-teal-500 bg-slate-50 text-right text-xs transition"
                             >
@@ -3298,12 +3450,9 @@
                               type="button"
                               onClick={() => {
                                 const p = selectedPatient || patients[0];
-                                setWhatsappSimulateText(WHATSAPP_TEMPLATES.radiologyReady({
-                                  patientName: p.name,
-                                  clinicName: settings.name,
-                                  scanName: 'أشعة بانوراما رقمية للفك والأسنان',
-                                  fileNumber: p.fileNumber
-                                }));
+                                setWhatsappSimulateText(
+                                  "مرحباً " + p.name + " 🔬\nنحيطكم علماً بجاهزية أشعة بانوراما رقمية للفك والأسنان في ملفكم الطبي (" + p.fileNumber + ") بمركز *" + settings.name + "*.\n🔗 يمكنكم الاطلاع المباشر على الصور من بوابة المريض.\nدمتم بأتم الصحة والعافية 🌸"
+                                );
                               }}
                               className="p-3 rounded-xl border border-slate-200 hover:border-purple-500 bg-slate-50 text-right text-xs transition"
                             >
@@ -3315,13 +3464,9 @@
                               type="button"
                               onClick={() => {
                                 const p = selectedPatient || patients[0];
-                                setWhatsappSimulateText(WHATSAPP_TEMPLATES.invoiceReady({
-                                  patientName: p.name,
-                                  clinicName: settings.name,
-                                  invoiceNumber: 'INV-2026-089',
-                                  total: 450,
-                                  currency: settings.currency
-                                }));
+                                setWhatsappSimulateText(
+                                  "مرحباً " + p.name + " 🧾\nتم إصدار فاتورتكم الضريبية الإلكترونية رقم: INV-2026-089\n💵 الإجمالي شامل 15% ضريبة: 450 " + settings.currency + "\nشاكرين لزيارتكم وثقتكم بنا ✨"
+                                );
                               }}
                               className="p-3 rounded-xl border border-slate-200 hover:border-indigo-500 bg-slate-50 text-right text-xs transition"
                             >
@@ -3435,8 +3580,8 @@
                         <label className="block text-xs font-bold text-slate-700 mb-1">اسم المركز / العيادة</label>
                         <input
                           type="text"
-                          value={tempSettings.name}
-                          onChange={(e) => setTempSettings({ ...tempSettings, name: e.target.value })}
+                          value={settingsForm.name}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, name: e.target.value })}
                           className="w-full text-xs font-bold p-3 rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                         />
                       </div>
@@ -3445,8 +3590,8 @@
                         <label className="block text-xs font-bold text-slate-700 mb-1">الرقم الضريبي للمنشأة (ZATCA VAT ID)</label>
                         <input
                           type="text"
-                          value={tempSettings.vatNumber}
-                          onChange={(e) => setTempSettings({ ...tempSettings, vatNumber: e.target.value })}
+                          value={settingsForm.taxNumber}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, taxNumber: e.target.value })}
                           className="w-full text-xs font-mono font-bold p-3 rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                         />
                       </div>
@@ -3455,8 +3600,8 @@
                         <label className="block text-xs font-bold text-slate-700 mb-1">رقم السجل التجاري (CR Number)</label>
                         <input
                           type="text"
-                          value={tempSettings.crNumber}
-                          onChange={(e) => setTempSettings({ ...tempSettings, crNumber: e.target.value })}
+                          value={settingsForm.crNumber}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, crNumber: e.target.value })}
                           className="w-full text-xs font-mono font-bold p-3 rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                         />
                       </div>
@@ -3465,8 +3610,8 @@
                         <label className="block text-xs font-bold text-slate-700 mb-1">رقم الهاتف والتواصل</label>
                         <input
                           type="text"
-                          value={tempSettings.phone}
-                          onChange={(e) => setTempSettings({ ...tempSettings, phone: e.target.value })}
+                          value={settingsForm.phone}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, phone: e.target.value })}
                           className="w-full text-xs font-mono font-bold p-3 rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                           dir="ltr"
                         />
@@ -3476,8 +3621,8 @@
                         <label className="block text-xs font-bold text-slate-700 mb-1">العنوان الجغرافي للمركز</label>
                         <input
                           type="text"
-                          value={tempSettings.address}
-                          onChange={(e) => setTempSettings({ ...tempSettings, address: e.target.value })}
+                          value={settingsForm.branch}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, branch: e.target.value })}
                           className="w-full text-xs font-medium p-3 rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                         />
                       </div>
@@ -3486,8 +3631,8 @@
                         <label className="block text-xs font-bold text-slate-700 mb-1">رمز العملة</label>
                         <input
                           type="text"
-                          value={tempSettings.currency}
-                          onChange={(e) => setTempSettings({ ...tempSettings, currency: e.target.value })}
+                          value={settingsForm.currency}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, currency: e.target.value })}
                           className="w-full text-xs font-bold p-3 rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                         />
                       </div>
@@ -3496,8 +3641,8 @@
                         <label className="block text-xs font-bold text-slate-700 mb-1">نسبة ضريبة القيمة المضافة (%)</label>
                         <input
                           type="number"
-                          value={tempSettings.taxRate}
-                          onChange={(e) => setTempSettings({ ...tempSettings, taxRate: Number(e.target.value) })}
+                          value={settingsForm.vatRate}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, vatRate: Number(e.target.value) })}
                           className="w-full text-xs font-mono font-bold p-3 rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                         />
                       </div>
@@ -3507,7 +3652,6 @@
               )}
 
             </main>
-          </div>
         </div>
 
         {/* ============================================================ */}
@@ -3519,11 +3663,11 @@
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div className="flex items-center gap-3">
                   <span className="w-10 h-10 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center text-xl font-bold">
-                    {uploadType === 'lab' ? '🧪' : '🩻'}
+                    {uploadCategory === 'lab' ? '🧪' : '🩻'}
                   </span>
                   <div>
                     <h3 className="text-base font-black text-slate-800">
-                      {uploadType === 'lab' ? 'مزامنة وتوثيق نتيجة تحليل مخبري' : 'مزامنة ورفع صورة أشعة وتصوير طبي'}
+                      {uploadCategory === 'lab' ? 'مزامنة وتوثيق نتيجة تحليل مخبري' : 'مزامنة ورفع صورة أشعة وتصوير طبي'}
                     </h3>
                     <p className="text-xs text-slate-500 mt-0.5">ربط فوري ومباشر في السجل الطبي للمريض مع إرسال إشعار WhatsApp</p>
                   </div>
@@ -3540,16 +3684,16 @@
               <div className="flex rounded-2xl bg-slate-100 p-1 text-xs font-bold">
                 <button
                   type="button"
-                  onClick={() => setUploadType('lab')}
-                  className={"flex-1 py-2 rounded-xl transition flex items-center justify-center gap-2 " + (uploadType === 'lab' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-600')}
+                  onClick={() => setUploadCategory('lab')}
+                  className={"flex-1 py-2 rounded-xl transition flex items-center justify-center gap-2 " + (uploadCategory === 'lab' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-600')}
                 >
                   <span>🧪</span>
                   <span>فحص مخبري (Lab Test)</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setUploadType('radiology')}
-                  className={"flex-1 py-2 rounded-xl transition flex items-center justify-center gap-2 " + (uploadType === 'radiology' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-600')}
+                  onClick={() => setUploadCategory('radiology')}
+                  className={"flex-1 py-2 rounded-xl transition flex items-center justify-center gap-2 " + (uploadCategory === 'radiology' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-600')}
                 >
                   <span>🩻</span>
                   <span>أشعة وتصوير (Radiology / Scan)</span>
@@ -3576,12 +3720,12 @@
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      {uploadType === 'lab' ? 'اسم الفحص المخبري' : 'نوع الأشعة / الفحص'}
+                      {uploadCategory === 'lab' ? 'اسم الفحص المخبري' : 'نوع الأشعة / الفحص'}
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder={uploadType === 'lab' ? 'مثال: فحص وظائف الكبد LFT' : 'مثال: أشعة بانوراما للأسنان OPG'}
+                      placeholder={uploadCategory === 'lab' ? 'مثال: فحص وظائف الكبد LFT' : 'مثال: أشعة بانوراما للأسنان OPG'}
                       value={uploadTestName}
                       onChange={(e) => setUploadTestName(e.target.value)}
                       className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:border-brand-500"
@@ -3590,11 +3734,11 @@
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      {uploadType === 'lab' ? 'تصنيف الفحص' : 'المنطقة المستهدفة'}
+                      {uploadCategory === 'lab' ? 'تصنيف الفحص' : 'المنطقة المستهدفة'}
                     </label>
                     <input
                       type="text"
-                      placeholder={uploadType === 'lab' ? 'Hematology / Biochemistry' : 'الفك والأسنان / الجلد'}
+                      placeholder={uploadCategory === 'lab' ? 'Hematology / Biochemistry' : 'الفك والأسنان / الجلد'}
                       value={uploadCategory}
                       onChange={(e) => setUploadCategory(e.target.value)}
                       className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:border-brand-500"
@@ -3635,13 +3779,13 @@
                   </div>
                 </div>
 
-                {uploadType === 'lab' ? (
+                {uploadCategory === 'lab' ? (
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">النتائج والمؤشرات (Parameters JSON / Text)</label>
                     <textarea
                       rows="3"
-                      value={uploadParamText}
-                      onChange={(e) => setUploadParamText(e.target.value)}
+                      value={uploadParams}
+                      onChange={(e) => setUploadParams(e.target.value)}
                       placeholder='مثال: Hemoglobin: 14.5 g/dL (Normal) | WBC: 7.2 x10^3/uL'
                       className="w-full text-xs p-3 rounded-xl border border-slate-200 font-mono focus:border-brand-500"
                     ></textarea>
@@ -3651,8 +3795,8 @@
                     <label className="block text-xs font-bold text-slate-700 mb-1">التقرير الإشعاعي والملاحظات (Findings)</label>
                     <textarea
                       rows="3"
-                      value={uploadParamText}
-                      onChange={(e) => setUploadParamText(e.target.value)}
+                      value={uploadParams}
+                      onChange={(e) => setUploadParams(e.target.value)}
                       placeholder="اكتب التقرير الإشعاعي وملاحظات فني الأشعة..."
                       className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:border-brand-500"
                     ></textarea>
@@ -3681,7 +3825,7 @@
                   </button>
                   <button
                     type="button"
-                    onClick={handleInboundSubmit}
+                    onClick={handleInboundUpload}
                     className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-brand-600 hover:from-teal-700 hover:to-brand-700 text-white font-black text-xs shadow-md transition flex items-center gap-2"
                   >
                     <span>⚡</span>
@@ -3696,23 +3840,23 @@
         {/* ============================================================ */}
         {/* MODAL 2: HIGH-RESOLUTION REPORT PREVIEW (SHOWPREVIEWMODAL)   */}
         {/* ============================================================ */}
-        {showPreviewModal && previewRecord && (
+        {showPreviewModal && previewItem && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 overflow-y-auto">
             <div className="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl border border-slate-100 space-y-6 animate-in fade-in zoom-in duration-200 max-h-[92vh] overflow-y-auto">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div className="flex items-center gap-3">
                   <span className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-700 flex items-center justify-center text-2xl font-bold">
-                    {previewRecord.scanName ? '🩻' : '🧪'}
+                    {previewItem.scanName ? '🩻' : '🧪'}
                   </span>
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 font-mono">
-                        {previewRecord.id}
+                        {previewItem.id}
                       </span>
-                      <span className="text-xs font-mono text-slate-400">{previewRecord.date}</span>
+                      <span className="text-xs font-mono text-slate-400">{previewItem.date}</span>
                     </div>
                     <h3 className="text-lg font-black text-slate-800 mt-0.5">
-                      {previewRecord.scanName || previewRecord.testName}
+                      {previewItem.scanName || previewItem.testName}
                     </h3>
                   </div>
                 </div>
@@ -3728,34 +3872,34 @@
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
                 <div>
                   <span className="text-slate-400 block text-[11px]">الطبيب المشرف</span>
-                  <span className="font-bold text-slate-800">{previewRecord.orderingDoctor}</span>
+                  <span className="font-bold text-slate-800">{previewItem.orderingDoctor}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[11px]">التصنيف / الفئة</span>
-                  <span className="font-bold text-slate-800">{previewRecord.category || previewRecord.modality}</span>
+                  <span className="font-bold text-slate-800">{previewItem.category || previewItem.modality}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[11px]">تقييم الحالة</span>
-                  <span className={"font-bold " + (previewRecord.status === 'normal' ? 'text-emerald-600' : 'text-rose-600')}>
-                    {previewRecord.status === 'normal' ? 'طبيعي Normal' : previewRecord.status === 'abnormal' ? 'غير طبيعي' : '🚨 تنبيه حرج'}
+                  <span className={"font-bold " + (previewItem.status === 'normal' ? 'text-emerald-600' : 'text-rose-600')}>
+                    {previewItem.status === 'normal' ? 'طبيعي Normal' : previewItem.status === 'abnormal' ? 'غير طبيعي' : '🚨 تنبيه حرج'}
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[11px]">المراجعة السريرية</span>
                   <span className="font-bold text-emerald-700">
-                    {previewRecord.reviewed ? '✓ معتمد سريرياً' : 'قيد المراجعة'}
+                    {previewItem.reviewed ? '✓ معتمد سريرياً' : 'قيد المراجعة'}
                   </span>
                 </div>
               </div>
 
               {/* Image Preview if Radiology */}
-              {previewRecord.imageUrl && (
+              {previewItem.imageUrl && (
                 <div className="space-y-2">
                   <span className="text-xs font-bold text-slate-700 block">الصورة الإشعاعية الرقمية عالية الدقة:</span>
                   <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-950 p-2 flex items-center justify-center">
                     <img
-                      src={previewRecord.imageUrl}
-                      alt={previewRecord.scanName || 'Medical Scan'}
+                      src={previewItem.imageUrl}
+                      alt={previewItem.scanName || 'Medical Scan'}
                       className="max-h-96 w-auto object-contain rounded-xl"
                     />
                   </div>
@@ -3763,7 +3907,7 @@
               )}
 
               {/* Parameters Table if Lab Test */}
-              {previewRecord.parameters && (
+              {previewItem.parameters && (
                 <div className="space-y-2">
                   <span className="text-xs font-bold text-slate-700 block">نتائج المؤشرات المخبرية:</span>
                   <div className="overflow-x-auto rounded-xl border border-slate-200">
@@ -3778,7 +3922,7 @@
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {previewRecord.parameters.map((p, idx) => (
+                        {previewItem.parameters.map((p, idx) => (
                           <tr key={idx}>
                             <td className="p-2.5 font-bold text-slate-800">{p.name}</td>
                             <td className="p-2.5 font-mono font-bold text-brand-700">{p.value}</td>
@@ -3800,10 +3944,10 @@
               )}
 
               {/* Findings & Doctor Notes */}
-              {(previewRecord.findings || previewRecord.notes) && (
+              {(previewItem.findings || previewItem.notes) && (
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs text-slate-700 space-y-1">
                   <span className="font-bold text-slate-800 block">تقرير الأخصائي والتشخيص السريري:</span>
-                  <p className="leading-relaxed">{previewRecord.findings || previewRecord.notes}</p>
+                  <p className="leading-relaxed">{previewItem.findings || previewItem.notes}</p>
                 </div>
               )}
 
@@ -3965,7 +4109,7 @@
         {/* ============================================================ */}
         {/* MODAL 4: QUICK APPOINTMENT SLOT BOOKING                      */}
         {/* ============================================================ */}
-        {showQuickSlotModal && (
+        {showSlotModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
             <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -3973,7 +4117,7 @@
                   <span>📅</span>
                   <span>حجز موعد فوري جديد</span>
                 </h3>
-                <button onClick={() => setShowQuickSlotModal(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+                <button onClick={() => setShowSlotModal(false)} className="text-slate-400 hover:text-slate-600">✕</button>
               </div>
 
               <form onSubmit={handlePatientBookingSubmit} className="space-y-3 text-xs">
@@ -4044,7 +4188,7 @@
                 <div className="pt-3 border-t border-slate-100 flex justify-end gap-2">
                   <button
                     type="button"
-                    onClick={() => setShowQuickSlotModal(false)}
+                    onClick={() => setShowSlotModal(false)}
                     className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold"
                   >
                     إلغاء
