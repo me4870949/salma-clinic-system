@@ -168,7 +168,6 @@
       'caries': { label: 'تسوس نشط (Active Caries)', color: 'bg-orange-500 border-orange-600 text-white', badgeColor: 'bg-orange-100 text-orange-800' }
     };
 
-    // Adult 32 Teeth Quadrants ISO 3950
     const QUADRANTS = [
       { name: "العلوي الأيمن (Q1)", teeth: [18, 17, 16, 15, 14, 13, 12, 11] },
       { name: "العلوي الأيسر (Q2)", teeth: [21, 22, 23, 24, 25, 26, 27, 28] },
@@ -176,7 +175,6 @@
       { name: "السفلي الأيسر (Q3)", teeth: [31, 32, 33, 34, 35, 36, 37, 38] }
     ];
 
-    // --- 5. Initial Patients with Dental & Dermatology Records ---
     const INITIAL_PATIENTS = [
       {
         id: "PAT-1001",
@@ -206,18 +204,6 @@
             dcdCooling: "40/30 ms",
             treatedAreas: ["الوجه كامل", "الذراعين"],
             notes: "استجابة ممتازة، لا يوجد احمرار مفرط، تم وصف كريم مرمم"
-          },
-          {
-            date: "2026-07-28",
-            doctor: "د. سلمى الشمري",
-            device: "Profhilo BAP Technique",
-            treatment: "حقن نضارة بروفايلو (2ml)",
-            fluence: "N/A",
-            pulseWidth: "N/A",
-            spotSize: "N/A",
-            dcdCooling: "N/A",
-            treatedAreas: ["نقاط الوجه الخمس (BAP Points)"],
-            notes: "جلسة التعزيز الثانية لنضارة وتحفيز الكولاجين"
           }
         ]
       },
@@ -264,14 +250,13 @@
             pulseWidth: "N/A",
             spotSize: "N/A",
             dcdCooling: "Ice Pack",
-            treatedAreas: ["الجبهة", "بين الحاجبين", "محيط العينين (Crow's Feet)"],
+            treatedAreas: ["الجبهة", "بين الحاجبين", "محيط العينين"],
             notes: "توزيع دقيق للوحدات لتفادي ارتخاء الجفون"
           }
         ]
       }
     ];
 
-    // --- 6. Initial Appointments ---
     const INITIAL_APPOINTMENTS = [
       { id: "APT-001", patientId: "PAT-1001", patientName: "سارة عبد الله الشمري", phone: "+966501122334", doctorId: "u-doc-1", doctorName: "د. سلمى الشمري", specialty: "dermatology", serviceName: "جلسة رتوش ليزر كانديلا", date: "2026-09-04", time: "18:30", status: "in-progress", statusLabel: "في غرفة الكشف", price: 350 },
       { id: "APT-002", patientId: "PAT-1002", patientName: "محمد سلطان العنزي", phone: "+966554499881", doctorId: "u-doc-2", doctorName: "د. فهد العنزي", specialty: "dental", serviceName: "تركيب تاج زيركون للسن 46", date: "2026-09-04", time: "19:15", status: "waiting", statusLabel: "في صالة الانتظار", price: 850 },
@@ -279,13 +264,11 @@
       { id: "APT-004", patientId: "PAT-1001", patientName: "سارة عبد الله الشمري", phone: "+966501122334", doctorId: "u-doc-1", doctorName: "د. سلمى الشمري", specialty: "dermatology", serviceName: "جلسة نضارة Profhilo", date: "2026-09-06", time: "19:00", status: "scheduled", statusLabel: "مؤكد", price: 950 }
     ];
 
-    // --- 7. Initial Prescriptions ---
     const INITIAL_PRESCRIPTIONS = [
       { id: "RX-8801", patientId: "PAT-1002", patientName: "محمد سلطان العنزي", nationalId: "1083746251", doctorName: "د. فهد العنزي", doctorTitle: "أخصائي طب وجراحة الأسنان (ترخيص 49201)", date: "2026-09-04", diagnosis: "التهاب ما بعد علاج العصب للسن 46", items: [{ drugName: "Augmentin 1g", dosage: "قرص واحد", frequency: "مرتين يومياً بعد الأكل", duration: "5 أيام", instructions: "إكمال الكورس كاملاً" }, { drugName: "Cataflam 50mg", dosage: "قرص", frequency: "عند اللزوم / الألم الشديد", duration: "3 أيام", instructions: "بعد الأكل مع كوب ماء" }, { drugName: "Curasept Mouthwash", dosage: "10 مل", frequency: "مضمضة 3 مرات يومياً", duration: "7 أيام", instructions: "بدون بلع" }] },
       { id: "RX-8802", patientId: "PAT-1003", patientName: "نورة فهد المطيري", nationalId: "1074839201", doctorName: "د. سلمى الشمري", doctorTitle: "استشارية الجلدية والتجميل (ترخيص 38104)", date: "2026-09-04", diagnosis: "عناية وترميم ما بعد حقن البوتوكس", items: [{ drugName: "Arnicare Gel", dosage: "دهان موضعي", frequency: "3 مرات يومياً", duration: "4 أيام", instructions: "دهان برفق على مواضع الحقن" }, { drugName: "Avene Cicalfate+ Cream", dosage: "كريم مرمم", frequency: "مرتين يومياً", duration: "7 أيام", instructions: "مرطب صباحاً ومساءً" }] }
     ];
 
-    // --- 8. Initial Invoices with Payment Methods & ZATCA TLV ---
     const INITIAL_INVOICES = [
       { 
         id: "INV-9001", 
@@ -349,7 +332,6 @@
       }
     ];
 
-    // --- 9. Dynamic WhatsApp Templates ---
     const WHATSAPP_TEMPLATES = [
       { id: "tpl-1", title: "تأكيد حجز موعد جديد", template: "أهلاً بك {patient_name} 🌸\nنؤكد حجز موعدك في *{clinic_name}* ({branch}).\n📅 التاريخ: {date}\n⏰ الوقت: {time}\n👨‍⚕️ العيادة: {doctor_name}\n📍 العنوان: {branch}\n📞 هاتف المركز: {phone}\nنتطلع لخدمتكم بأعلى معايير الرعاية ✨" },
       { id: "tpl-2", title: "تذكير بالموعد (قبل 24 ساعة)", template: "تذكير بموعدكم غداً ⏰\nعزيزي/عزيزتي {patient_name}، نود تذكيركم بموعدكم القادم في *{clinic_name}*:\n⏰ الموعد: {time} - {date}\n🩺 الطبيب: {doctor_name}\nدمتم بصحة وجمال 🌿" },
@@ -404,7 +386,7 @@
       const [selectedPatient, setSelectedPatient] = useState(INITIAL_PATIENTS[0]);
       const [selectedRx, setSelectedRx] = useState(INITIAL_PRESCRIPTIONS[0]);
       const [selectedInv, setSelectedInv] = useState(INITIAL_INVOICES[0]);
-      const [patientTab, setPatientTab] = useState('appointments'); // 'appointments', 'odontogram', 'derma', 'prescriptions', 'invoices'
+      const [patientTab, setPatientTab] = useState('appointments');
 
       // --- 6. Form Inputs & Modals ---
       const [loginTab, setLoginTab] = useState('patient');
@@ -713,7 +695,7 @@
           serviceName: slotService,
           date: slotDate,
           time: slotTime,
-          status: 'waiting', // Enters waiting queue immediately
+          status: 'waiting',
           statusLabel: 'في صالة الانتظار',
           price: Number(slotPrice)
         };
@@ -798,7 +780,6 @@
       const totalDoctorComms = doctorStats.reduce((s, d) => s + d.commAmt, 0);
       const totalClinicNetProfit = Math.max(0, totalClinicGross - totalDoctorComms);
 
-      // Time slots & days for interactive calendar
       const timeSlots = ['09:00', '10:00', '11:00', '12:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'];
       const weekDays = [
         { label: 'السبت', date: '2026-09-04' },
@@ -1599,160 +1580,186 @@
 
               {/* 4. FINANCE DASHBOARD & ZATCA ANALYTICS */}
               {currentPath === '/dashboard/finance' && (
-                <div className="space-y-6">
-                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-xl flex justify-between items-center"}>
-                    <div>
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-bold mb-2">
-                        <span>💼</span>
-                        <span>التقارير المالية والامتثال الضريبي (ZATCA e-Invoicing)</span>
-                      </span>
-                      <h2 className="text-2xl sm:text-3xl font-black">الفوترة وضريبة القيمة المضافة ({settings.vatRate}%)</h2>
-                      <p className="text-xs font-mono text-sky-200 mt-1">الرقم الضريبي للمركز: {settings.taxNumber}</p>
+                <div className="space-y-8 animate-fade-in">
+                  {/* Header & Financial Quick Overview */}
+                  <div className="text-left font-mono font-bold text-xs bg-white/10 px-5 py-3 rounded-3xl backdrop-blur-md border border-white/20 shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 transition-all duration-300">
+                    <div className="space-y-0.5">
+                      <span className="text-slate-200 text-[11px] block">إجمالي المبيعات العامة</span>
+                      <div className="text-lg font-black text-white">{totalClinicWithVat} {settings.currency}</div>
+                    </div>
+                    <div className="px-3 py-1 bg-white/10 rounded-xl text-sky-200 text-[11px] font-mono border border-white/10">
+                      الضريبة المستحقة ({settings.vatRate}%): {totalClinicVat} {settings.currency}
                     </div>
                   </div>
 
-                  {/* KPI Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                    <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
-                      <div className="text-slate-500 font-bold">إجمالي الإيرادات (قبل الضريبة)</div>
-                      <div className="text-2xl font-black text-slate-900 font-mono">{totalClinicGross} {settings.currency}</div>
+                  {/* Stat Cards Grid with Enhanced Visual Hierarchy */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    <div className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-100 space-y-2 hover:-translate-y-1 transition-all duration-300">
+                      <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-700 font-bold mb-3 shadow-inner">📊</div>
+                      <div className="text-xs text-slate-500 font-bold tracking-wide">إجمالي الإيرادات (بدون الضريبة)</div>
+                      <div className="text-2xl font-black font-mono text-slate-900 tracking-tight">{totalClinicGross} <span className="text-sm font-bold text-slate-500">{settings.currency}</span></div>
                     </div>
-                    <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
-                      <div className="text-slate-500 font-bold">إجمالي ضريبة 15% ZATCA</div>
-                      <div className="text-2xl font-black text-emerald-600 font-mono">{totalClinicVat} {settings.currency}</div>
+                    <div className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/80 shadow-xl shadow-brand-50/50 space-y-2 hover:-translate-y-1 transition-all duration-300">
+                      <div className="w-10 h-10 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-600 font-bold mb-3 shadow-inner">🧾</div>
+                      <div className="text-xs text-slate-500 font-bold tracking-wide">إجمالي ضريبة القيمة المضافة ({settings.vatRate}%)</div>
+                      <div className="text-2xl font-black font-mono text-brand-600 tracking-tight">{totalClinicVat} <span className="text-sm font-bold text-brand-400">{settings.currency}</span></div>
                     </div>
-                    <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
-                      <div className="text-slate-500 font-bold">الإجمالي النهائي شامل الضريبة</div>
-                      <div className="text-2xl font-black text-brand-700 font-mono">{totalClinicWithVat} {settings.currency}</div>
+                    <div className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/80 shadow-xl shadow-emerald-50/50 space-y-2 hover:-translate-y-1 transition-all duration-300">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold mb-3 shadow-inner">💰</div>
+                      <div className="text-xs text-slate-500 font-bold tracking-wide">إجمالي الإيرادات شامل الضريبة</div>
+                      <div className="text-2xl font-black font-mono text-emerald-600 tracking-tight">{totalClinicWithVat} <span className="text-sm font-bold text-emerald-400">{settings.currency}</span></div>
                     </div>
                   </div>
 
-                  {/* Payment Breakdown Analytics */}
-                  <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
-                    <h3 className="text-sm font-black text-slate-900">توزيع طرق التحصيل والمدفوعات (Payment Analytics)</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div className="p-4 bg-sky-50 rounded-2xl border border-sky-100">
-                        <div className="flex justify-between text-xs font-bold text-sky-950 mb-1">
-                          <span>مدى (Mada):</span>
-                          <span>{paymentBreakdown.mada.pct}% ({paymentBreakdown.mada.amount} {settings.currency})</span>
+                  {/* Payment Methods Breakdown & ZATCA QR Invoices */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="bg-white/90 backdrop-blur-xl rounded-3xl border border-slate-200/80 p-6 shadow-xl space-y-5 lg:col-span-1">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                          <span>💳</span> طرق الدفع والتحصيل المالي
+                        </h3>
+                        <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-mono font-bold">محدث فورياً</span>
+                      </div>
+                      <div className="space-y-3 text-xs">
+                        <div className="p-3.5 bg-slate-50/80 hover:bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center transition-all">
+                          <span className="font-bold text-slate-700 flex items-center gap-2">💳 مدى (Mada)</span>
+                          <span className="font-mono font-bold text-brand-700 bg-brand-50/80 px-2.5 py-1 rounded-xl">{paymentBreakdown.mada.amount} <span className="text-[10px]">({paymentBreakdown.mada.pct}%)</span></span>
                         </div>
-                        <div className="w-full bg-sky-200 rounded-full h-2">
-                          <div className="bg-sky-600 h-2 rounded-full" style={{ width: paymentBreakdown.mada.pct + '%' }}></div>
+                        <div className="p-3.5 bg-slate-50/80 hover:bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center transition-all">
+                          <span className="font-bold text-slate-700 flex items-center gap-2">🍎 Apple Pay</span>
+                          <span className="font-mono font-bold text-brand-700 bg-brand-50/80 px-2.5 py-1 rounded-xl">{paymentBreakdown.apple.amount} <span className="text-[10px]">({paymentBreakdown.apple.pct}%)</span></span>
+                        </div>
+                        <div className="p-3.5 bg-slate-50/80 hover:bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center transition-all">
+                          <span className="font-bold text-slate-700 flex items-center gap-2">💵 نقدي (Cash)</span>
+                          <span className="font-mono font-bold text-brand-700 bg-brand-50/80 px-2.5 py-1 rounded-xl">{paymentBreakdown.cash.amount} <span className="text-[10px]">({paymentBreakdown.cash.pct}%)</span></span>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="p-4 bg-purple-50 rounded-2xl border border-purple-100">
-                        <div className="flex justify-between text-xs font-bold text-purple-950 mb-1">
-                          <span>Apple Pay:</span>
-                          <span>{paymentBreakdown.apple.pct}% ({paymentBreakdown.apple.amount} {settings.currency})</span>
-                        </div>
-                        <div className="w-full bg-purple-200 rounded-full h-2">
-                          <div className="bg-purple-600 h-2 rounded-full" style={{ width: paymentBreakdown.apple.pct + '%' }}></div>
-                        </div>
+                    <div className="bg-white/90 backdrop-blur-xl rounded-3xl border border-slate-200/80 p-6 shadow-xl space-y-5 lg:col-span-2">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                          <span>🏛️</span> سجل الفواتير الضريبية الإلكترونية (ZATCA Phase 1 & 2 TLV)
+                        </h3>
+                        <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full font-mono font-bold">متوافق مع هيئة الزكاة</span>
                       </div>
-
-                      <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                        <div className="flex justify-between text-xs font-bold text-emerald-950 mb-1">
-                          <span>نقدي (Cash):</span>
-                          <span>{paymentBreakdown.cash.pct}% ({paymentBreakdown.cash.amount} {settings.currency})</span>
-                        </div>
-                        <div className="w-full bg-emerald-200 rounded-full h-2">
-                          <div className="bg-emerald-600 h-2 rounded-full" style={{ width: paymentBreakdown.cash.pct + '%' }}></div>
-                        </div>
+                      <div className="space-y-3.5 max-h-[420px] overflow-y-auto pl-1">
+                        {invoices.map(inv => {
+                          const zatcaB64 = generateZatcaTlvBase64(settings.name, settings.taxNumber, inv.date + 'T' + (inv.time || '18:00') + ':00Z', inv.totalWithVat, inv.vatAmount);
+                          const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=" + encodeURIComponent(zatcaB64);
+                          return (
+                            <div key={inv.id} className="p-4 rounded-2xl bg-slate-50/70 hover:bg-slate-50 border border-slate-200/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs transition-all duration-200 shadow-sm">
+                              <div className="flex items-center gap-3.5">
+                                <img src={qrUrl} alt="ZATCA QR" className="w-14 h-14 rounded-xl border border-slate-200 bg-white p-1 shadow-sm shrink-0" />
+                                <div className="space-y-1">
+                                  <div className="font-mono font-black text-slate-900 text-sm tracking-tight">{inv.invoiceNumber}</div>
+                                  <div className="text-slate-600 font-medium">{inv.patientName} <span className="text-slate-400">•</span> {inv.doctorName}</div>
+                                  <div className="text-slate-400 font-mono text-[10px] flex items-center gap-1.5">
+                                    <span>📅 {inv.date}</span>
+                                    <span>•</span>
+                                    <span className="bg-slate-200/60 px-2 py-0.5 rounded-md text-slate-700 font-bold">{inv.paymentMethodLabel}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200/60">
+                                <div className="text-left font-mono font-black text-brand-700 text-sm">{inv.totalWithVat} <span className="text-[10px] font-normal">{settings.currency}</span></div>
+                                <button onClick={() => { setSelectedInv(inv); setTimeout(() => window.print(), 150); }} className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-md transition-all duration-200 active:scale-95">طباعة الفاتورة</button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* 5. OWNER & DOCTOR PROFITS DASHBOARD */}
+              {/* 5. OWNER DASHBOARD & DOCTOR COMMISSIONS */}
               {currentPath === '/dashboard/owner' && (
-                <div className="space-y-6">
-                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-xl flex justify-between items-center"}>
-                    <div>
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-bold mb-2">
+                <div className="space-y-8 animate-fade-in">
+                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-hidden"}>
+                    <div className="absolute -left-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                    <div className="space-y-2 relative z-10">
+                      <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/15 text-white text-xs font-bold backdrop-blur-md border border-white/20">
                         <span>👑</span>
-                        <span>لوحة مالك المركز والمدير التنفيذي (Executive Suite)</span>
+                        <span>لوحة مالك المركز وإدارة أرباح وعمولات الأطباء (Owner P&L)</span>
                       </span>
-                      <h2 className="text-2xl sm:text-3xl font-black">تقرير أرباح المركز وعمولات الأطباء</h2>
-                      <p className="text-xs text-sky-200 mt-1">مركز {settings.name} • {settings.branch}</p>
+                      <h2 className="text-2xl sm:text-3xl font-black tracking-tight">تحليل العمولات وصافي أرباح المركز</h2>
+                      <p className="text-xs text-sky-100 font-medium">{settings.name} <span className="opacity-70">•</span> {settings.branch}</p>
                     </div>
                     <button
                       onClick={() => setCurrentPath('/settings')}
-                      className="px-4 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold backdrop-blur-sm border border-white/20"
+                      className="px-5 py-3 bg-white hover:bg-sky-50 text-slate-900 font-black text-xs rounded-2xl shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-95 relative z-10 flex items-center gap-2"
                     >
-                      ⚙️ إعدادات المركز (SaaS)
+                      <span>⚙️</span> إعدادات وهوية المركز
                     </button>
                   </div>
 
-                  {/* Executive Metric Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                    <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
-                      <div className="text-slate-500 font-bold">إجمالي الإيرادات المحققة</div>
-                      <div className="text-2xl font-black text-slate-900 font-mono">{totalClinicGross} {settings.currency}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    <div className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/80 shadow-xl space-y-2">
+                      <div className="text-xs text-slate-500 font-bold">إجمالي إيرادات المركز</div>
+                      <div className="text-2xl font-black font-mono text-slate-900">{totalClinicGross} <span className="text-sm font-bold text-slate-400">{settings.currency}</span></div>
                     </div>
-                    <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
-                      <div className="text-slate-500 font-bold">إجمالي عمولات الأطباء المستحقة</div>
-                      <div className="text-2xl font-black text-amber-600 font-mono">{totalDoctorComms} {settings.currency}</div>
+                    <div className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/80 shadow-xl space-y-2">
+                      <div className="text-xs text-slate-500 font-bold">إجمالي مستحقات وعمولات الأطباء</div>
+                      <div className="text-2xl font-black font-mono text-rose-600">{totalDoctorComms} <span className="text-sm font-bold text-rose-300">{settings.currency}</span></div>
                     </div>
-                    <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
-                      <div className="text-slate-500 font-bold">صافي أرباح المركز التشغيلي</div>
-                      <div className="text-2xl font-black text-emerald-600 font-mono">{totalClinicNetProfit} {settings.currency}</div>
+                    <div className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/80 shadow-xl space-y-2">
+                      <div className="text-xs text-slate-500 font-bold">صافي ربح المركز التشغيلي</div>
+                      <div className="text-2xl font-black font-mono text-emerald-600">{totalClinicNetProfit} <span className="text-sm font-bold text-emerald-300">{settings.currency}</span></div>
                     </div>
                   </div>
 
-                  {/* Doctor Profit & Commission Module */}
-                  <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-sm font-black text-slate-900">وحدة تتبع ومراقبة عمولات ورواتب الأطباء</h3>
-                      <span className="text-xs text-slate-500">حسابات ديناميكية فورية</span>
+                  {/* Doctor Commission Table with Live Adjuster */}
+                  <div className="bg-white/90 backdrop-blur-xl rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xl space-y-6">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                      <h3 className="text-sm font-black text-slate-900">حساب رواتب وعمولات الأطباء (مع إمكانية تعديل نسبة العمولات فورياً)</h3>
+                      <span className="text-xs bg-slate-100 px-3 py-1 rounded-full font-bold text-slate-600 font-mono">ERP Medical Core</span>
                     </div>
-
                     <div className="overflow-x-auto">
-                      <table className="w-full text-right text-xs border-collapse">
+                      <table className="w-full text-right text-xs">
                         <thead>
-                          <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
-                            <th className="p-3">الطبيب</th>
-                            <th className="p-3">الراتب الأساسي</th>
-                            <th className="p-3 text-center">العمولة %</th>
-                            <th className="p-3">الإيراد المنجز</th>
-                            <th className="p-3">العمولة المستحقة</th>
-                            <th className="p-3">إجمالي الاستحقاق</th>
-                            <th className="p-3">صافي دخل المركز</th>
-                            <th className="p-3 text-center">إجراء</th>
+                          <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-700 font-bold">
+                            <th className="p-3.5 rounded-r-2xl">الطبيب</th>
+                            <th className="p-3.5">عدد الحالات</th>
+                            <th className="p-3.5">إجمالي الإيراد</th>
+                            <th className="p-3.5">الراتب الأساسي</th>
+                            <th className="p-3.5">نسبة العمولات</th>
+                            <th className="p-3.5">مبلغ العمولة</th>
+                            <th className="p-3.5">إجمالي المستحق</th>
+                            <th className="p-3.5 rounded-l-2xl">إجراء</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                           {doctorStats.map(doc => (
-                            <tr key={doc.id} className="hover:bg-slate-50 transition">
-                              <td className="p-3 font-bold text-slate-900">
-                                <div>{doc.name}</div>
-                                <div className="text-[10px] text-slate-500 font-normal">{doc.specialtyName}</div>
+                            <tr key={doc.id} className="hover:bg-slate-50/60 transition-colors">
+                              <td className="p-3.5 font-bold flex items-center gap-3">
+                                <img src={doc.avatar} alt={doc.name} className="w-9 h-9 rounded-2xl object-cover shadow-sm border border-slate-200" />
+                                <div>
+                                  <div className="text-slate-900 font-black">{doc.name}</div>
+                                  <div className="text-[10px] text-slate-400 font-normal">{doc.specialtyName}</div>
+                                </div>
                               </td>
-                              <td className="p-3 font-mono font-bold text-slate-700">{doc.baseSalary} {settings.currency}</td>
-                              <td className="p-3 text-center font-mono font-bold">
+                              <td className="p-3.5 font-mono font-bold text-slate-700">{doc.count}</td>
+                              <td className="p-3.5 font-mono font-bold text-slate-900">{doc.gross} {settings.currency}</td>
+                              <td className="p-3.5 font-mono text-slate-600">{doc.baseSalary || 15000}</td>
+                              <td className="p-3.5 font-mono font-bold text-brand-700">
                                 {editingDocId === doc.id ? (
-                                  <input
-                                    type="number"
-                                    value={tempRate}
-                                    onChange={e => setTempRate(e.target.value)}
-                                    className="w-14 p-1 border rounded text-center text-xs"
-                                  />
+                                  <div className="flex items-center gap-1.5">
+                                    <input type="number" value={tempRate} onChange={e => setTempRate(e.target.value)} className="w-16 p-1.5 border border-brand-300 rounded-xl text-xs font-mono bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                                    <span className="font-bold">%</span>
+                                  </div>
                                 ) : (
-                                  <span className="bg-amber-50 text-amber-800 px-2 py-0.5 rounded font-black border border-amber-200">
-                                    {doc.commissionRate}%
-                                  </span>
+                                  <span className="bg-brand-50 px-2.5 py-1 rounded-xl text-brand-800">{doc.commissionRate || 30}%</span>
                                 )}
                               </td>
-                              <td className="p-3 font-mono font-bold text-slate-900">{doc.gross} {settings.currency}</td>
-                              <td className="p-3 font-mono font-bold text-amber-600">{doc.commAmt} {settings.currency}</td>
-                              <td className="p-3 font-mono font-black text-slate-900">{doc.payout} {settings.currency}</td>
-                              <td className="p-3 font-mono font-black text-emerald-600">{doc.clinicNet} {settings.currency}</td>
-                              <td className="p-3 text-center">
+                              <td className="p-3.5 font-mono font-bold text-rose-600">{doc.commAmt} {settings.currency}</td>
+                              <td className="p-3.5 font-mono font-black text-emerald-700 text-sm">{doc.payout} {settings.currency}</td>
+                              <td className="p-3.5">
                                 {editingDocId === doc.id ? (
-                                  <button onClick={() => handleUpdateDoctorCommission(doc.id)} className="px-3 py-1 bg-emerald-600 text-white rounded-lg font-bold text-[11px]">حفظ</button>
+                                  <button onClick={() => handleUpdateDoctorCommission(doc.id)} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md transition-all">حفظ</button>
                                 ) : (
-                                  <button onClick={() => { setEditingDocId(doc.id); setTempRate(String(doc.commissionRate)); }} className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[11px]">تعديل %</button>
+                                  <button onClick={() => { setEditingDocId(doc.id); setTempRate(String(doc.commissionRate || 30)); }} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all">تعديل النسبة</button>
                                 )}
                               </td>
                             </tr>
@@ -1764,180 +1771,101 @@
                 </div>
               )}
 
-              {/* 6. APPOINTMENTS PAGE */}
+              {/* 6. APPOINTMENTS CALENDAR VIEW */}
               {currentPath === '/appointments' && (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h2 className="text-lg font-black text-slate-900">جدول المواعيد الشامل (Interactive Schedule)</h2>
-                      <p className="text-xs text-slate-500">مركز {settings.name}</p>
+                <div className="space-y-8 animate-fade-in">
+                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-2xl flex justify-between items-center"}>
+                    <div className="space-y-1">
+                      <h2 className="text-2xl font-black">إدارة المواعيد والتقويم الشامل</h2>
+                      <p className="text-xs text-sky-100">حجز وتتبع المواعيد السريرية في {settings.name}</p>
                     </div>
-                    <button
-                      onClick={() => { setSlotDate('2026-09-04'); setSlotTime('18:00'); setShowSlotModal(true); }}
-                      className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm"
-                    >
-                      + حجز موعد جديد
-                    </button>
+                    <button onClick={() => setShowSlotModal(true)} className="px-5 py-3 bg-white hover:bg-sky-50 text-slate-900 font-black text-xs rounded-2xl shadow-xl transition-all duration-200 hover:scale-[1.02]">+ حجز موعد جديد</button>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {appointments.map(a => (
-                      <div key={a.id} className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-3 flex flex-col justify-between">
-                        <div>
-                          <div className="flex justify-between items-center mb-2">
-                            <span className={"text-[10px] font-bold px-2 py-0.5 rounded-full " + (a.specialty === 'dental' ? 'bg-blue-50 text-blue-800' : 'bg-teal-50 text-teal-800')}>
-                              {a.specialty === 'dental' ? 'طب الأسنان' : 'الجلدية والتجميل'}
-                            </span>
-                            <span className="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded-full">{a.statusLabel}</span>
+                  <div className="bg-white/90 backdrop-blur-xl rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xl space-y-6">
+                    <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-3">قائمة كافة المواعيد المحجوزة</h3>
+                    <div className="space-y-3.5">
+                      {appointments.map(a => (
+                        <div key={a.id} className="p-4.5 bg-slate-50/80 hover:bg-slate-50 border border-slate-200/60 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs transition-all shadow-sm">
+                          <div className="space-y-1">
+                            <div className="font-black text-sm text-slate-900">{a.patientName} <span className="text-slate-400 font-normal">•</span> {a.serviceName}</div>
+                            <div className="text-slate-500">الطبيب: <strong className="text-slate-800">{a.doctorName}</strong> <span className="text-slate-300">|</span> الموعد: <span className="font-mono text-slate-700">{a.date} ({a.time})</span></div>
                           </div>
-                          <div className="font-black text-sm text-slate-900">{a.patientName}</div>
-                          <div className="text-xs text-brand-700 font-bold mt-0.5">{a.serviceName} ({a.price} {settings.currency})</div>
-                          <div className="text-xs text-slate-500 mt-1">الطبيب: {a.doctorName}</div>
-                          <div className="text-xs font-mono text-slate-400 mt-0.5">📅 {a.date} ({a.time})</div>
-                        </div>
-                        <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
-                          <button
-                            onClick={() => { const p = patients.find(pt => pt.id === a.patientId); if (p) { setSelectedPatient(p); setCurrentPath('/patients'); } }}
-                            className="text-xs text-brand-600 font-bold hover:underline"
-                          >
-                            استعراض ملف المريض EMR ←
-                          </button>
-                          {a.status === 'scheduled' && (
-                            <button onClick={() => handleCancelAppt(a.id)} className="text-[11px] text-rose-600 bg-rose-50 px-2 py-1 rounded font-bold">إلغاء</button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 7. PATIENTS EMR & ODONTOGRAM DIRECTORY */}
-              {currentPath === '/patients' && (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h2 className="text-lg font-black text-slate-900">سجل المرضى والملف الطبي الإلكتروني (EMR)</h2>
-                      <p className="text-xs text-slate-500">مركز {settings.name}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Patient List */}
-                    <div className="lg:col-span-4 space-y-2">
-                      {patients.map(p => (
-                        <div
-                          key={p.id}
-                          onClick={() => setSelectedPatient(p)}
-                          className={"p-4 rounded-2xl border cursor-pointer transition text-xs space-y-1 " + (
-                            selectedPatient?.id === p.id 
-                              ? 'bg-brand-50/80 border-brand-500 shadow-sm' 
-                              : 'bg-white border-slate-200/80 hover:bg-slate-50'
-                          )}
-                        >
-                          <div className="font-black text-slate-900 flex justify-between">
-                            <span>{p.name}</span>
-                            <span className="font-mono text-slate-400 text-[11px]">{p.id}</span>
+                          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200">
+                            <span className="px-3 py-1 bg-emerald-50 text-emerald-800 font-bold rounded-full border border-emerald-200/60">{a.statusLabel}</span>
+                            {a.status === 'scheduled' && (
+                              <button onClick={() => handleCancelAppt(a.id)} className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl border border-rose-200 transition-all">إلغاء</button>
+                            )}
                           </div>
-                          <div className="text-slate-500 font-mono" dir="ltr">{p.phone}</div>
-                          <div className="text-[11px] text-slate-600">الهوية: <span className="font-mono">{p.nationalId}</span> | دم: {p.bloodGroup}</div>
                         </div>
                       ))}
                     </div>
-
-                    {/* Patient Detail Panel */}
-                    <div className="lg:col-span-8">
-                      {selectedPatient && (
-                        <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-6">
-                          <div className="flex justify-between items-start border-b border-slate-100 pb-4">
-                            <div>
-                              <h3 className="text-base font-black text-slate-900">{selectedPatient.name}</h3>
-                              <div className="text-xs text-slate-500 mt-0.5">هوية: <span className="font-mono">{selectedPatient.nationalId}</span> • العمر: {selectedPatient.age} سنة • فصيلة: {selectedPatient.bloodGroup}</div>
-                            </div>
-                            <span className="text-xs bg-rose-50 text-rose-700 px-3 py-1 rounded-xl font-bold border border-rose-200">
-                              حساسية: {selectedPatient.allergies}
-                            </span>
-                          </div>
-
-                          {/* Dental Teeth Records */}
-                          <div className="space-y-3">
-                            <h4 className="text-xs font-black text-slate-900">🦷 سجل علاجات الأسنان:</h4>
-                            {(!selectedPatient.dentalRecords || selectedPatient.dentalRecords.length === 0) ? (
-                              <div className="text-xs text-slate-400">لا توجد علاجات مسجلة.</div>
-                            ) : (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {selectedPatient.dentalRecords.map((r, idx) => (
-                                  <div key={idx} className="p-3 bg-brand-50/50 rounded-xl border border-brand-100 text-xs">
-                                    <div className="font-bold text-brand-900">السن #{r.toothNumber} - {r.conditionLabel}</div>
-                                    <div className="text-slate-600 text-[11px] mt-0.5">{r.notes} • {r.date}</div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Dermatology Records */}
-                          <div className="space-y-3 pt-3 border-t border-slate-100">
-                            <h4 className="text-xs font-black text-slate-900">✨ سجل جلسات الجلدية والليزر:</h4>
-                            {(!selectedPatient.dermatologyRecords || selectedPatient.dermatologyRecords.length === 0) ? (
-                              <div className="text-xs text-slate-400">لا توجد جلسات ليزر مسجلة.</div>
-                            ) : (
-                              <div className="space-y-2">
-                                {selectedPatient.dermatologyRecords.map((s, idx) => (
-                                  <div key={idx} className="p-3 bg-teal-50/50 rounded-xl border border-teal-100 text-xs">
-                                    <div className="font-bold text-teal-900">{s.treatment} ({s.device})</div>
-                                    <div className="text-slate-600 text-[11px] mt-0.5">طاقة: {s.fluence} | نبضة: {s.pulseWidth} | بقعة: {s.spotSize} | {s.notes}</div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
               )}
 
-              {/* 8. PRESCRIPTIONS REPOSITORY */}
-              {currentPath === '/prescriptions' && (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h2 className="text-lg font-black text-slate-900">أرشيف الروشتات والوصفات الطبية الإلكترونية</h2>
-                      <p className="text-xs text-slate-500">مركز {settings.name}</p>
-                    </div>
+              {/* 7. PATIENTS DIRECTORY VIEW */}
+              {currentPath === '/patients' && (
+                <div className="space-y-8 animate-fade-in">
+                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-2xl"}>
+                    <h2 className="text-2xl font-black">سجل المرضى والملفات الطبية</h2>
+                    <p className="text-xs text-sky-100 mt-1">إدارة ملفات المرضى وتاريخهم العلاجي ومخطط الأسنان</p>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {prescriptions.map(rx => (
-                      <div key={rx.id} className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
-                        <div className="flex justify-between items-start border-b border-slate-100 pb-3">
-                          <div>
-                            <div className="font-black text-slate-900 text-sm">{rx.patientName}</div>
-                            <div className="text-xs text-brand-700 font-bold mt-0.5">التشخيص: {rx.diagnosis}</div>
-                            <div className="text-xs text-slate-500 mt-0.5">{rx.doctorName}</div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {patients.map(p => (
+                      <div key={p.id} className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/80 shadow-xl space-y-4 flex flex-col justify-between hover:shadow-2xl transition-all duration-300">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-[10px] font-mono bg-brand-50 text-brand-700 px-3 py-1 rounded-full font-bold border border-brand-100">{p.id}</span>
+                            <span className="text-xs text-rose-600 font-black bg-rose-50 px-2.5 py-0.5 rounded-full">{p.bloodGroup}</span>
                           </div>
-                          <span className="font-mono text-xs font-bold text-slate-500">{rx.id}</span>
+                          <h4 className="text-base font-black text-slate-900">{p.name}</h4>
+                          <div className="text-xs text-slate-500 font-mono space-y-1 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                            <div>الهوية: <strong className="text-slate-700">{p.nationalId}</strong></div>
+                            <div>الهاتف: <strong className="text-slate-700">{p.phone}</strong></div>
+                          </div>
                         </div>
+                        <button
+                          onClick={() => { setSelectedPatient(p); setCurrentPath('/dashboard/patient'); }}
+                          className="w-full py-3 bg-slate-900 hover:bg-brand-600 text-white font-bold rounded-2xl text-xs shadow-md transition-all duration-200 active:scale-95"
+                        >
+                          عرض الملف السريري الكامل 📂
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-                        <div className="space-y-1.5 text-xs">
+              {/* 8. PRESCRIPTIONS VIEW */}
+              {currentPath === '/prescriptions' && (
+                <div className="space-y-8 animate-fade-in">
+                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-2xl"}>
+                    <h2 className="text-2xl font-black">الروشتات والوصفات الطبية الإلكترونية</h2>
+                    <p className="text-xs text-sky-100 mt-1">أرشفة وإصدار وصفات الأدوية المعتمدة</p>
+                  </div>
+                  <div className="space-y-5">
+                    {prescriptions.map(rx => (
+                      <div key={rx.id} className="bg-white/90 backdrop-blur-xl rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xl space-y-5">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-4 gap-2">
+                          <div>
+                            <div className="text-sm font-black text-slate-900">المريض: {rx.patientName} <span className="text-slate-400 font-normal">(هوية: {rx.nationalId})</span></div>
+                            <div className="text-xs text-slate-500 mt-1">التشخيص: <strong className="text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md">{rx.diagnosis}</strong> <span className="mx-1">•</span> الطبيب: {rx.doctorName}</div>
+                          </div>
+                          <span className="font-mono text-xs font-bold text-brand-700 bg-brand-50 px-3 py-1.5 rounded-xl border border-brand-100">{rx.id} ({rx.date})</span>
+                        </div>
+                        <div className="space-y-3">
                           {rx.items.map((it, idx) => (
-                            <div key={idx} className="p-2.5 bg-slate-50 rounded-xl flex justify-between">
-                              <span className="font-bold text-slate-800">{it.drugName} - {it.dosage}</span>
-                              <span className="text-slate-600">{it.frequency}</span>
+                            <div key={idx} className="p-4 bg-brand-50/40 hover:bg-brand-50/70 border border-brand-100/60 rounded-2xl flex justify-between items-center text-xs transition-all">
+                              <div className="space-y-0.5">
+                                <div className="font-black text-slate-900 text-sm">{it.drugName} - <span className="text-brand-700">{it.dosage}</span></div>
+                                <div className="text-slate-600 text-[11px] font-medium">{it.instructions}</div>
+                              </div>
+                              <span className="font-bold text-brand-800 bg-white px-3 py-1 rounded-xl shadow-xs border border-brand-200">{it.frequency} ({it.duration})</span>
                             </div>
                           ))}
                         </div>
-
-                        <div className="pt-2 flex justify-end">
-                          <button
-                            onClick={() => { setSelectedRx(rx); setTimeout(() => window.print(), 150); }}
-                            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5"
-                          >
-                            <span>🖨️</span>
-                            <span>طباعة الوصفة الطبية</span>
-                          </button>
+                        <div className="flex justify-end pt-2">
+                          <button onClick={() => { setSelectedRx(rx); setTimeout(() => window.print(), 150); }} className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs shadow-md transition-all">طباعة الوصفة الطبية</button>
                         </div>
                       </div>
                     ))}
@@ -1945,56 +1873,37 @@
                 </div>
               )}
 
-              {/* 9. INVOICES & ZATCA TAX PAGE */}
+              {/* 9. INVOICES VIEW */}
               {currentPath === '/invoices' && (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h2 className="text-lg font-black text-slate-900">سجل الفواتير الضريبية المبسطة (15% ZATCA)</h2>
-                      <p className="text-xs font-mono text-slate-500">الرقم الضريبي: {settings.taxNumber}</p>
-                    </div>
+                <div className="space-y-8 animate-fade-in">
+                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-2xl"}>
+                    <h2 className="text-2xl font-black">الفواتير الضريبية الإلكترونية (ZATCA QR)</h2>
+                    <p className="text-xs text-sky-100 mt-1">الفواتير المتوافقة مع متطلبات هيئة الزكاة والضريبة والجمارك</p>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="space-y-5">
                     {invoices.map(inv => {
                       const zatcaB64 = generateZatcaTlvBase64(settings.name, settings.taxNumber, inv.date + 'T' + (inv.time || '18:00') + ':00Z', inv.totalWithVat, inv.vatAmount);
                       const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" + encodeURIComponent(zatcaB64);
-
                       return (
-                        <div key={inv.id} className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 flex flex-col justify-between">
-                          <div>
-                            <div className="flex justify-between items-start border-b border-slate-100 pb-2">
-                              <div>
-                                <div className="font-black text-slate-900 text-sm">{inv.patientName}</div>
-                                <div className="text-xs text-slate-500 font-mono mt-0.5">{inv.invoiceNumber}</div>
+                        <div key={inv.id} className="bg-white/90 backdrop-blur-xl rounded-3xl border border-slate-200/80 p-6 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 transition-all hover:shadow-2xl">
+                          <div className="flex items-center gap-5">
+                            <img src={qrUrl} alt="ZATCA QR Code" className="w-16 h-16 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm shrink-0" />
+                            <div className="space-y-1">
+                              <div className="font-mono font-black text-slate-900 text-sm">{inv.invoiceNumber}</div>
+                              <div className="text-xs text-slate-600 font-medium">المريض: {inv.patientName} <span className="text-slate-300">|</span> الطبيب: {inv.doctorName}</div>
+                              <div className="text-xs text-slate-400 font-mono mt-0.5 flex items-center gap-2">
+                                <span>📅 {inv.date}</span>
+                                <span>•</span>
+                                <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold">{inv.paymentMethodLabel}</span>
                               </div>
-                              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full">{inv.paymentMethodLabel}</span>
-                            </div>
-
-                            <div className="py-2 space-y-1 text-xs">
-                              {inv.items.map((it, idx) => (
-                                <div key={idx} className="flex justify-between text-slate-600">
-                                  <span>{it.description}</span>
-                                  <span className="font-mono font-bold">{it.total} {settings.currency}</span>
-                                </div>
-                              ))}
                             </div>
                           </div>
-
-                          <div className="pt-2 border-t border-slate-100 space-y-2">
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs text-slate-500">شامل ضريبة 15%:</span>
-                              <span className="text-base font-black text-brand-700 font-mono">{inv.totalWithVat} {settings.currency}</span>
+                          <div className="flex items-center gap-5 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100">
+                            <div className="text-left">
+                              <div className="text-[11px] text-slate-400 font-bold">الإجمالي شامل الضريبة</div>
+                              <div className="text-base font-black font-mono text-brand-700">{inv.totalWithVat} <span className="text-xs">{settings.currency}</span></div>
                             </div>
-                            <div className="flex justify-between items-center">
-                              <img src={qrUrl} alt="ZATCA QR" className="w-12 h-12 rounded border" />
-                              <button
-                                onClick={() => { setSelectedInv(inv); setTimeout(() => window.print(), 150); }}
-                                className="px-3.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm"
-                              >
-                                طباعة الفاتورة 🖨️
-                              </button>
-                            </div>
+                            <button onClick={() => { setSelectedInv(inv); setTimeout(() => window.print(), 150); }} className="px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-2xl text-xs shadow-lg shadow-brand-600/20 transition-all active:scale-95">طباعة الفاتورة</button>
                           </div>
                         </div>
                       );
@@ -2005,275 +1914,185 @@
 
               {/* 10. WHATSAPP NOTIFICATIONS & WEBHOOK SIMULATOR */}
               {currentPath === '/whatsapp-notifications' && (
-                <div className="space-y-4">
-                  <div>
-                    <h2 className="text-lg font-black text-slate-900">نظام إشعارات الواتساب التلقائي (WAHA / Evolution API)</h2>
-                    <p className="text-xs text-slate-500">إرسال روابط المواعيد، الفواتير، والوصفات الطبية تلقائياً</p>
+                <div className="space-y-8 animate-fade-in">
+                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-2xl"}>
+                    <h2 className="text-2xl font-black">إشعارات الواتساب التلقائية (WAHA & n8n Webhook)</h2>
+                    <p className="text-xs text-sky-100 mt-1">إرسال تفاصيل المواعيد، الروشتات، والفواتير الضريبية مباشرة عبر الواتساب</p>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div className="lg:col-span-7 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 text-xs">
-                      <div>
-                        <label className="block font-bold text-slate-700 mb-1">اختر المريض:</label>
-                        <select
-                          value={waPatientId}
-                          onChange={e => setWaPatientId(e.target.value)}
-                          className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold"
-                        >
+                  <div className="bg-white/90 backdrop-blur-xl rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xl space-y-6">
+                    <div className="border-b border-slate-100 pb-3">
+                      <h3 className="text-sm font-black text-slate-900">محاكي إرسال الرسائل عبر واتساب</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
+                      <div className="space-y-1.5">
+                        <label className="block font-bold text-slate-700">اختر المريض:</label>
+                        <select value={waPatientId} onChange={e => setWaPatientId(e.target.value)} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-500">
                           {patients.map(p => (
                             <option key={p.id} value={p.id}>{p.name} ({p.phone})</option>
                           ))}
                         </select>
                       </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-700 mb-1">اختر قالب الرسالة الذكي:</label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="space-y-1.5">
+                        <label className="block font-bold text-slate-700">قالب الرسالة الجاهز:</label>
+                        <select value={waTplId} onChange={e => setWaTplId(e.target.value)} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-500">
                           {WHATSAPP_TEMPLATES.map(t => (
-                            <button
-                              key={t.id}
-                              type="button"
-                              onClick={() => setWaTplId(t.id)}
-                              className={"p-2.5 rounded-xl border text-right font-bold transition " + (
-                                waTplId === t.id ? 'bg-brand-50 border-brand-500 text-brand-900' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                              )}
-                            >
-                              {t.title}
-                            </button>
+                            <option key={t.id} value={t.id}>{t.title}</option>
                           ))}
-                        </div>
+                        </select>
                       </div>
+                    </div>
 
-                      <div>
-                        <label className="block font-bold text-slate-700 mb-1">رقم الواتساب المستهدف:</label>
-                        <input
-                          type="text"
-                          dir="ltr"
-                          value={waPhone}
-                          onChange={e => setWaPhone(e.target.value)}
-                          className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono"
-                        />
-                      </div>
+                    <div className="space-y-1.5">
+                      <label className="block font-bold text-slate-700 text-xs">نص الرسالة المُولَّد تلقائياً:</label>
+                      <textarea
+                        rows={6}
+                        value={waMessage}
+                        onChange={e => setWaMessage(e.target.value)}
+                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner leading-relaxed"
+                      />
+                    </div>
 
-                      <div>
-                        <label className="block font-bold text-slate-700 mb-1">نص الرسالة المنشأ ديناميكياً:</label>
-                        <textarea
-                          rows="6"
-                          value={waMessage}
-                          onChange={e => setWaMessage(e.target.value)}
-                          className="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl font-sans text-xs leading-relaxed"
-                        />
-                      </div>
-
+                    <div className="flex justify-end">
                       <button
                         type="button"
                         onClick={handleSendWhatsAppWebhook}
-                        className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-2xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
+                        className="px-7 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl text-xs shadow-xl shadow-emerald-600/25 transition-all duration-200 hover:scale-[1.02] active:scale-95 flex items-center gap-2.5"
                       >
-                        <span>💬</span>
-                        <span>إرسال الإشعار عبر الواتساب وفتح المحادثة 🚀</span>
+                        <span className="text-base">💬</span>
+                        <span>إرسال عبر الواتساب فورياً (WAHA API)</span>
                       </button>
                     </div>
 
-                    {/* WhatsApp Preview Bubble */}
-                    <div className="lg:col-span-5 bg-slate-900 p-6 rounded-3xl text-white shadow-xl flex flex-col justify-between space-y-4">
-                      <div>
-                        <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold mb-4">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                          <span>معاينة الرسالة كما ستظهر للمريض (WhatsApp Bubble):</span>
-                        </div>
-                        
-                        <div className="bg-[#0b141a] p-4 rounded-2xl border border-slate-800">
-                          <div className="bg-[#005c4b] p-3.5 rounded-2xl rounded-tr-none text-xs text-white leading-relaxed whitespace-pre-wrap shadow-md">
-                            {waMessage}
+                    {waStatusLog.length > 0 && (
+                      <div className="mt-6 pt-5 border-t border-slate-100 space-y-2.5 text-xs">
+                        <div className="font-black text-slate-700">سجل عمليات الإرسال الأخيرة:</div>
+                        {waStatusLog.map(log => (
+                          <div key={log.id} className="p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-2xl flex justify-between items-center shadow-xs">
+                            <div>
+                              <span className="font-mono font-bold text-emerald-900">رقم الهاتف: {log.phone}</span>
+                              <span className="text-emerald-700 mr-2 font-semibold">• تم الإرسال بنجاح</span>
+                            </div>
+                            <span className="font-mono text-slate-500 text-[10px] bg-white px-2 py-0.5 rounded-md border border-emerald-100">{log.time}</span>
                           </div>
-                          <div className="text-[10px] text-slate-500 text-left mt-1 font-mono">18:30 ✓✓</div>
-                        </div>
+                        ))}
                       </div>
-
-                      <div className="bg-slate-800/80 p-3 rounded-2xl border border-slate-700 text-[11px] space-y-1">
-                        <div className="text-sky-300 font-bold">📡 إعدادات الربط الآلي (WAHA Endpoint):</div>
-                        <div className="text-slate-400 font-mono text-[10px] truncate">{settings.wahaUrl}</div>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* 11. GLOBAL DYNAMIC SETTINGS & WHITE-LABELING (SAAS MODE) */}
-              {currentPath === '/settings' && user.role === 'owner' && (
-                <div className="space-y-6">
-                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-xl flex justify-between items-center"}>
-                    <div>
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-bold mb-2">
-                        <span>⚙️</span>
-                        <span>لوحة التحكم في إعدادات وهوية المركز (SaaS White-Labeling)</span>
-                      </span>
-                      <h2 className="text-2xl sm:text-3xl font-black">تخصيص الهوية، الضرائب، والثيم</h2>
-                      <p className="text-xs text-sky-200 mt-1">تنعكس التغييرات فورياً في الهيدر، الفواتير، الوصفات، وقوالب الواتساب</p>
-                    </div>
+              {/* 11. WHITE-LABEL SaaS SETTINGS */}
+              {currentPath === '/settings' && (
+                <div className="space-y-8 animate-fade-in">
+                  <div className={"bg-gradient-to-l " + themeColors.bgGradient + " rounded-3xl p-6 sm:p-8 text-white shadow-2xl"}>
+                    <h2 className="text-2xl font-black">إعدادات وهوية المركز (White-Label SaaS)</h2>
+                    <p className="text-xs text-sky-100 mt-1">تخصيص اسم المركز، الفروع، الرقم الضريبي، والثيم البصري للنظام</p>
                   </div>
 
-                  <form onSubmit={handleSaveSettings} className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-6 text-xs">
-                    
-                    {/* Section 1: Basic Clinic Identity */}
-                    <div className="space-y-4">
-                      <h3 className="text-sm font-black text-slate-900 border-b pb-2 flex items-center gap-2">
-                        <span>🏥</span>
-                        <span>بيانات المنشأة وهوية المركز الأساسية</span>
-                      </h3>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">اسم المركز بالعربية (Clinic Name AR):</label>
-                          <input
-                            type="text"
-                            value={settingsForm.name}
-                            onChange={e => setSettingsForm({ ...settingsForm, name: e.target.value })}
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">اسم المركز بالإنجليزية (Clinic Name EN):</label>
-                          <input
-                            type="text"
-                            dir="ltr"
-                            value={settingsForm.nameEn}
-                            onChange={e => setSettingsForm({ ...settingsForm, nameEn: e.target.value })}
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">الفرع والعنوان (Branch / Location):</label>
-                          <input
-                            type="text"
-                            value={settingsForm.branch}
-                            onChange={e => setSettingsForm({ ...settingsForm, branch: e.target.value })}
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">رقم الهاتف والتواصل (Phone / WhatsApp):</label>
-                          <input
-                            type="text"
-                            dir="ltr"
-                            value={settingsForm.phone}
-                            onChange={e => setSettingsForm({ ...settingsForm, phone: e.target.value })}
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-slate-900"
-                          />
-                        </div>
+                  <form onSubmit={handleSaveSettings} className="bg-white/90 backdrop-blur-xl rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xl space-y-6 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div className="space-y-1.5">
+                        <label className="block font-bold text-slate-700">اسم المركز بالعربي:</label>
+                        <input
+                          type="text"
+                          value={settingsForm.name}
+                          onChange={e => setSettingsForm({ ...settingsForm, name: e.target.value })}
+                          className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="block font-bold text-slate-700">اسم المركز بالإنجليزي (English Name):</label>
+                        <input
+                          type="text"
+                          value={settingsForm.nameEn}
+                          onChange={e => setSettingsForm({ ...settingsForm, nameEn: e.target.value })}
+                          className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-500"
+                          dir="ltr"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="block font-bold text-slate-700">اسم الفرع والعنوان:</label>
+                        <input
+                          type="text"
+                          value={settingsForm.branch}
+                          onChange={e => setSettingsForm({ ...settingsForm, branch: e.target.value })}
+                          className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="block font-bold text-slate-700">رقم هاتف المركز:</label>
+                        <input
+                          type="text"
+                          value={settingsForm.phone}
+                          onChange={e => setSettingsForm({ ...settingsForm, phone: e.target.value })}
+                          className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-500"
+                          dir="ltr"
+                        />
                       </div>
                     </div>
 
-                    {/* Section 2: ZATCA & Taxes */}
-                    <div className="space-y-4 pt-4 border-t border-slate-100">
-                      <h3 className="text-sm font-black text-slate-900 border-b pb-2 flex items-center gap-2">
-                        <span>🧾</span>
-                        <span>إعدادات الفوترة الضريبية وهيئة الزكاة (ZATCA Compliance)</span>
-                      </h3>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">الرقم الضريبي للمنشأة (15 Digits VAT):</label>
-                          <input
-                            type="text"
-                            dir="ltr"
-                            value={settingsForm.taxNumber}
-                            onChange={e => setSettingsForm({ ...settingsForm, taxNumber: e.target.value })}
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-slate-900"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">نسبة ضريبة القيمة المضافة (VAT %):</label>
-                          <input
-                            type="number"
-                            value={settingsForm.vatRate}
-                            onChange={e => setSettingsForm({ ...settingsForm, vatRate: Number(e.target.value) })}
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-slate-900"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">رمز العملة (Currency):</label>
-                          <input
-                            type="text"
-                            value={settingsForm.currency}
-                            onChange={e => setSettingsForm({ ...settingsForm, currency: e.target.value })}
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
-                          />
-                        </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-4 border-t border-slate-100">
+                      <div className="space-y-1.5">
+                        <label className="block font-bold text-slate-700">الرقم الضريبي (ZATCA VAT):</label>
+                        <input
+                          type="text"
+                          value={settingsForm.taxNumber}
+                          onChange={e => setSettingsForm({ ...settingsForm, taxNumber: e.target.value })}
+                          className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-mono font-bold shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-500"
+                          dir="ltr"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="block font-bold text-slate-700">نسبة الضريبة (%):</label>
+                        <input
+                          type="number"
+                          value={settingsForm.vatRate}
+                          onChange={e => setSettingsForm({ ...settingsForm, vatRate: Number(e.target.value) })}
+                          className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-mono font-bold shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="block font-bold text-slate-700">رمز العملة:</label>
+                        <input
+                          type="text"
+                          value={settingsForm.currency}
+                          onChange={e => setSettingsForm({ ...settingsForm, currency: e.target.value })}
+                          className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        />
                       </div>
                     </div>
 
-                    {/* Section 3: UI Theme Selector */}
-                    <div className="space-y-4 pt-4 border-t border-slate-100">
-                      <h3 className="text-sm font-black text-slate-900 border-b pb-2 flex items-center gap-2">
-                        <span>🎨</span>
-                        <span>مظهر وثيم النظام (UI Theme Mode)</span>
-                      </h3>
-
+                    {/* Theme Radios */}
+                    <div className="space-y-3 pt-4 border-t border-slate-100">
+                      <label className="block font-bold text-slate-700">مظهر وثيم النظام (UI Theme Mode):</label>
                       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                         <label className={"p-4 rounded-2xl border-2 cursor-pointer flex flex-col justify-between transition " + (settingsForm.theme === 'blue' ? 'border-brand-600 bg-blue-50/50 shadow-sm' : 'border-slate-200 bg-white hover:bg-slate-50')}>
-                          <input
-                            type="radio"
-                            name="theme"
-                            value="blue"
-                            checked={settingsForm.theme === 'blue'}
-                            onChange={() => setSettingsForm({ ...settingsForm, theme: 'blue' })}
-                            className="hidden"
-                          />
+                          <input type="radio" name="theme" value="blue" checked={settingsForm.theme === 'blue'} onChange={() => setSettingsForm({ ...settingsForm, theme: 'blue' })} className="hidden" />
                           <div className="font-bold text-blue-900 text-xs flex items-center gap-2">
                             <span className="w-4 h-4 rounded-full bg-blue-600"></span>
                             <span>الأزرق الطبي (Clean Blue)</span>
                           </div>
                           <p className="text-[10px] text-slate-500 mt-2">تصميم عصري ونقي بمدرجات الياقوت والسماء</p>
                         </label>
-
                         <label className={"p-4 rounded-2xl border-2 cursor-pointer flex flex-col justify-between transition " + (settingsForm.theme === 'emerald' ? 'border-emerald-600 bg-emerald-50/50 shadow-sm' : 'border-slate-200 bg-white hover:bg-slate-50')}>
-                          <input
-                            type="radio"
-                            name="theme"
-                            value="emerald"
-                            checked={settingsForm.theme === 'emerald'}
-                            onChange={() => setSettingsForm({ ...settingsForm, theme: 'emerald' })}
-                            className="hidden"
-                          />
+                          <input type="radio" name="theme" value="emerald" checked={settingsForm.theme === 'emerald'} onChange={() => setSettingsForm({ ...settingsForm, theme: 'emerald' })} className="hidden" />
                           <div className="font-bold text-emerald-900 text-xs flex items-center gap-2">
                             <span className="w-4 h-4 rounded-full bg-emerald-600"></span>
                             <span>الزمردي والنعناع (Emerald)</span>
                           </div>
                           <p className="text-[10px] text-slate-500 mt-2">ثيم العيادات الكلاسيكية والألوان الطبيعية</p>
                         </label>
-
                         <label className={"p-4 rounded-2xl border-2 cursor-pointer flex flex-col justify-between transition " + (settingsForm.theme === 'indigo' ? 'border-indigo-600 bg-indigo-50/50 shadow-sm' : 'border-slate-200 bg-white hover:bg-slate-50')}>
-                          <input
-                            type="radio"
-                            name="theme"
-                            value="indigo"
-                            checked={settingsForm.theme === 'indigo'}
-                            onChange={() => setSettingsForm({ ...settingsForm, theme: 'indigo' })}
-                            className="hidden"
-                          />
+                          <input type="radio" name="theme" value="indigo" checked={settingsForm.theme === 'indigo'} onChange={() => setSettingsForm({ ...settingsForm, theme: 'indigo' })} className="hidden" />
                           <div className="font-bold text-indigo-900 text-xs flex items-center gap-2">
                             <span className="w-4 h-4 rounded-full bg-indigo-600"></span>
                             <span>الليلكي والياقوت (Indigo)</span>
                           </div>
                           <p className="text-[10px] text-slate-500 mt-2">ثيم مراكز التجميل والجلدية الراقية</p>
                         </label>
-
                         <label className={"p-4 rounded-2xl border-2 cursor-pointer flex flex-col justify-between transition " + (settingsForm.theme === 'teal' ? 'border-teal-600 bg-teal-50/50 shadow-sm' : 'border-slate-200 bg-white hover:bg-slate-50')}>
-                          <input
-                            type="radio"
-                            name="theme"
-                            value="teal"
-                            checked={settingsForm.theme === 'teal'}
-                            onChange={() => setSettingsForm({ ...settingsForm, theme: 'teal' })}
-                            className="hidden"
-                          />
+                          <input type="radio" name="theme" value="teal" checked={settingsForm.theme === 'teal'} onChange={() => setSettingsForm({ ...settingsForm, theme: 'teal' })} className="hidden" />
                           <div className="font-bold text-teal-900 text-xs flex items-center gap-2">
                             <span className="w-4 h-4 rounded-full bg-teal-600"></span>
                             <span>التركواز السريري (Teal)</span>
@@ -2283,24 +2102,14 @@
                       </div>
                     </div>
 
-                    {/* Submit Actions */}
                     <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={handleResetSettings}
-                        className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition text-xs"
-                      >
+                      <button type="button" onClick={handleResetSettings} className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition text-xs">
                         استعادة الإعدادات الافتراضية 🔄
                       </button>
-
-                      <button
-                        type="submit"
-                        className="px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white font-black rounded-2xl shadow-lg shadow-brand-600/20 text-xs sm:text-sm transition"
-                      >
+                      <button type="submit" className="px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white font-black rounded-2xl shadow-lg shadow-brand-600/20 text-xs sm:text-sm transition">
                         حفظ وتطبيق إعدادات وهوية المركز فورياً 🚀
                       </button>
                     </div>
-
                   </form>
                 </div>
               )}
@@ -2477,7 +2286,6 @@
           <div className="hidden print-area p-8 bg-white text-black" dir="rtl">
             {selectedRx && (
               <div className="space-y-6 max-w-2xl mx-auto border-2 border-slate-900 p-8 rounded-2xl">
-                {/* Header */}
                 <div className="flex justify-between items-center border-b-2 border-slate-900 pb-4">
                   <div>
                     <h1 className="text-xl font-black">{settings.name}</h1>
@@ -2491,7 +2299,6 @@
                   </div>
                 </div>
 
-                {/* Patient & Doctor Details */}
                 <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl text-xs border">
                   <div>
                     <div><strong>اسم المريض:</strong> {selectedRx.patientName}</div>
@@ -2507,7 +2314,6 @@
                   <div className="text-xs font-bold mb-1"><strong>التشخيص السريري:</strong> {selectedRx.diagnosis}</div>
                 </div>
 
-                {/* Medications Table */}
                 <div className="space-y-2">
                   <div className="font-serif text-2xl font-black">℞</div>
                   <table className="w-full text-right text-xs border-collapse border border-slate-300">
@@ -2534,7 +2340,6 @@
                   </table>
                 </div>
 
-                {/* Signature */}
                 <div className="pt-8 flex justify-between items-end text-xs">
                   <div className="text-slate-400 text-[10px]">صدرت هذه الوصفة إلكترونياً ولا تتطلب ختماً ورقياً.</div>
                   <div className="text-center">
